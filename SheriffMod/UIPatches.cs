@@ -13,10 +13,18 @@ namespace ClassicUs.SheriffMod
             try
             {
                 var versionText = __instance.text;
-                if (__instance == null || versionText == null) return;
+                if (__instance == null || versionText == null)
+                {
+                    SheriffPlugin.Log.LogInfo("[VersionShower] instance or text is null, aborting");
+                    return;
+                }
 
                 var parent = versionText.transform.parent != null ? versionText.transform.parent : versionText.transform;
-                if (parent.Find("SheriffModVersion") != null) return;
+                if (parent.Find("SheriffModVersion") != null)
+                {
+                    SheriffPlugin.Log.LogInfo("[VersionShower] label already exists, skipping");
+                    return;
+                }
 
                 versionText.ForceMeshUpdate(false, false);
                 var rend = versionText.GetComponent<MeshRenderer>();
@@ -24,7 +32,10 @@ namespace ClassicUs.SheriffMod
                 float lineHeight = worldBounds.size.y > 0f ? worldBounds.size.y : 0.2f;
                 float gap = lineHeight * 0.25f;
 
+                SheriffPlugin.Log.LogInfo($"[VersionShower] versionText.text='{versionText.text}' rend={(rend != null)} bounds={worldBounds} font={(versionText.font != null)} mat={(versionText.fontSharedMaterial != null)} parent={parent.name} scale={versionText.transform.localScale} layer={versionText.gameObject.layer}");
+
                 var go = new GameObject("SheriffModVersion");
+                go.layer = versionText.gameObject.layer;
                 go.transform.SetParent(parent, true);
                 go.transform.localScale = versionText.transform.localScale;
                 go.transform.position = new Vector3(worldBounds.min.x, worldBounds.min.y - gap, versionText.transform.position.z);
@@ -37,6 +48,9 @@ namespace ClassicUs.SheriffMod
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
                 tmp.alignment = TextAlignmentOptions.TopLeft;
                 tmp.enableWordWrapping = false;
+                tmp.ForceMeshUpdate(true, true);
+
+                SheriffPlugin.Log.LogInfo($"[VersionShower] label created at {go.transform.position}, active={go.activeInHierarchy}, rendererEnabled={(tmp.renderer != null ? tmp.renderer.enabled.ToString() : "no renderer")}");
             }
             catch (Exception e)
             {
