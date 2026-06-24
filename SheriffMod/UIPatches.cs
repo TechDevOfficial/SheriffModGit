@@ -15,19 +15,16 @@ namespace ClassicUs.SheriffMod
                 var versionText = __instance.text;
                 if (__instance == null || versionText == null) return;
 
-                var parent = versionText.transform.parent != null ? versionText.transform.parent : versionText.transform;
-                if (parent.Find("SheriffModVersion") != null) return;
+                if (versionText.transform.Find("SheriffModVersion") != null) return;
 
                 versionText.ForceMeshUpdate(false, false);
-                var rend = versionText.GetComponent<MeshRenderer>();
-                Bounds worldBounds = rend != null ? rend.bounds : new Bounds(versionText.transform.position, Vector3.zero);
-                float lineHeight = worldBounds.size.y > 0f ? worldBounds.size.y : 0.2f;
-                float gap = lineHeight * 0.25f;
+                float lineHeight = versionText.textBounds.size.y > 0f ? versionText.textBounds.size.y : 1f;
 
                 var go = new GameObject("SheriffModVersion");
-                go.transform.SetParent(parent, true);
-                go.transform.localScale = versionText.transform.localScale;
-                go.transform.position = new Vector3(worldBounds.min.x, worldBounds.min.y - gap, versionText.transform.position.z);
+                go.transform.SetParent(versionText.transform, false);
+                go.transform.localPosition = new Vector3(0f, -lineHeight * 1.2f, 0f);
+                go.transform.localRotation = Quaternion.identity;
+                go.transform.localScale = Vector3.one;
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.font = versionText.font;
@@ -35,7 +32,7 @@ namespace ClassicUs.SheriffMod
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
                 tmp.fontSize = versionText.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
-                tmp.alignment = TextAlignmentOptions.TopLeft;
+                tmp.alignment = versionText.alignment;
                 tmp.enableWordWrapping = false;
             }
             catch (Exception e)
