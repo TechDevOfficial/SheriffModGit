@@ -18,6 +18,7 @@ namespace ClassicUs.SheriffMod
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
+        public const string Version = "1.0.0";
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";
