@@ -44,27 +44,6 @@ namespace ClassicUs.SheriffMod
     }
 
 
-    [HarmonyPatch(typeof(HudManager), nameof(HudManager.FixedUpdate))]
-    internal static class HudManager_FixedUpdate_Patch
-    {
-        private static void Postfix(HudManager __instance)
-        {
-            try
-            {
-                if (__instance == null) return;
-                var tmp = __instance.GameSettingsTMP;
-                if (tmp == null || string.IsNullOrEmpty(tmp.text)) return;
-                if (tmp.text.Contains("Sheriff Mod")) return;
-
-                tmp.text += "\n<color=#FFA600>< Sheriff Mod ></color>";
-            }
-            catch (Exception e)
-            {
-                SheriffPlugin.Log.LogError("HudManager GameSettings patch: " + e);
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(PingTracker), nameof(PingTracker.Update))]
     internal static class PingTracker_Update_Patch
     {
@@ -72,14 +51,30 @@ namespace ClassicUs.SheriffMod
         {
             try
             {
-                if (__instance == null || __instance.text == null) return;
-                var t = __instance.text;
-                if (!t.Text.EndsWith("\nmod by Manu"))
-                    t.Text += "\nmod by Manu";
+                if (__instance != null && __instance.text != null)
+                {
+                    var t = __instance.text;
+                    if (!t.Text.EndsWith("\nmod by Manu"))
+                        t.Text += "\nmod by Manu";
+                }
             }
             catch (Exception e)
             {
                 SheriffPlugin.Log.LogError("PingTracker patch: " + e);
+            }
+
+            try
+            {
+                if (HudManager.InstanceExists)
+                {
+                    var tmp = HudManager.Instance.GameSettingsTMP;
+                    if (tmp != null && !string.IsNullOrEmpty(tmp.text) && !tmp.text.Contains("Sheriff Mod"))
+                        tmp.text += "\n<color=#FFA600>< Sheriff Mod ></color>";
+                }
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("HudManager GameSettings patch: " + e);
             }
         }
     }
