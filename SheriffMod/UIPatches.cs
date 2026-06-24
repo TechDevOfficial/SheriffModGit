@@ -34,30 +34,17 @@ namespace ClassicUs.SheriffMod
 
                 SheriffPlugin.Log.LogInfo($"[VersionShower] versionText.text='{versionText.text}' rend={(rend != null)} bounds={worldBounds} font={(versionText.font != null)} mat={(versionText.fontSharedMaterial != null)} parent={parent.name} scale={versionText.transform.localScale} layer={versionText.gameObject.layer}");
 
-                var go = new GameObject("SheriffModVersion");
-                go.layer = versionText.gameObject.layer;
-                go.transform.SetParent(parent, true);
-                go.transform.localScale = versionText.transform.localScale;
+                var go = UnityEngine.Object.Instantiate(versionText.gameObject, parent);
+                go.name = "SheriffModVersion";
                 go.transform.position = new Vector3(worldBounds.min.x, worldBounds.min.y - gap, versionText.transform.position.z);
 
-                var tmp = go.AddComponent<TextMeshPro>();
-                tmp.font = versionText.font;
-                tmp.fontSharedMaterial = versionText.fontSharedMaterial;
+                var tmp = go.GetComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
-                tmp.fontSize = versionText.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
                 tmp.alignment = TextAlignmentOptions.TopLeft;
-                tmp.enableWordWrapping = false;
                 tmp.ForceMeshUpdate(true, true);
 
-                var tmpRenderer = tmp.renderer;
-                if (rend != null && tmpRenderer != null)
-                {
-                    tmpRenderer.sortingLayerID = rend.sortingLayerID;
-                    tmpRenderer.sortingOrder = rend.sortingOrder + 10;
-                }
-
-                SheriffPlugin.Log.LogInfo($"[VersionShower] label created at {go.transform.position}, active={go.activeInHierarchy}, rendererEnabled={(tmpRenderer != null ? tmpRenderer.enabled.ToString() : "no renderer")}, sortingLayer={(tmpRenderer != null ? tmpRenderer.sortingLayerID.ToString() : "n/a")}, sortingOrder={(tmpRenderer != null ? tmpRenderer.sortingOrder.ToString() : "n/a")}, origSortingOrder={(rend != null ? rend.sortingOrder.ToString() : "n/a")}");
+                SheriffPlugin.Log.LogInfo($"[VersionShower] label created at {go.transform.position}, active={go.activeInHierarchy}, rendererEnabled={(tmp.renderer != null ? tmp.renderer.enabled.ToString() : "no renderer")}");
             }
             catch (Exception e)
             {
