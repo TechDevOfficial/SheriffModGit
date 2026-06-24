@@ -17,12 +17,9 @@ namespace ClassicUs.SheriffMod
 
                 if (versionText.transform.Find("SheriffModVersion") != null) return;
 
-                versionText.ForceMeshUpdate(false, false);
-                float lineHeight = versionText.textBounds.size.y > 0f ? versionText.textBounds.size.y : 1f;
-
                 var go = new GameObject("SheriffModVersion");
                 go.transform.SetParent(versionText.transform, false);
-                go.transform.localPosition = new Vector3(0f, -lineHeight * 1.2f, 0f);
+                go.transform.localPosition = new Vector3(0f, -versionText.fontSize * 1.5f, 0f);
                 go.transform.localRotation = Quaternion.identity;
                 go.transform.localScale = Vector3.one;
 
