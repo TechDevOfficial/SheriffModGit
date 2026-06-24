@@ -23,18 +23,17 @@ namespace ClassicUs.SheriffMod
                 Bounds worldBounds = rend != null ? rend.bounds : new Bounds(versionText.transform.position, Vector3.zero);
                 float lineHeight = worldBounds.size.y > 0f ? worldBounds.size.y : 0.2f;
                 float gap = lineHeight * 0.25f;
-                float rightShift = lineHeight * 0.6f;
 
                 var go = new GameObject("SheriffModVersion");
                 go.transform.SetParent(parent, true);
                 go.transform.localScale = versionText.transform.localScale;
-                go.transform.position = new Vector3(versionText.transform.position.x + rightShift, worldBounds.min.y - gap, versionText.transform.position.z);
+                go.transform.position = new Vector3(worldBounds.min.x, worldBounds.min.y - gap, versionText.transform.position.z);
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
                 tmp.fontSize = versionText.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
-                tmp.alignment = versionText.alignment;
+                tmp.alignment = TextAlignmentOptions.TopLeft;
                 tmp.enableWordWrapping = false;
             }
             catch (Exception e)
