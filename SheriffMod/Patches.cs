@@ -13,6 +13,11 @@ namespace ClassicUs.SheriffMod
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
     internal static class RoleManager_Start_Patch
     {
+        private static void Prefix(RoleManager __instance)
+        {
+            RoleRegistration.EnsureSheriffRegistered(__instance);
+        }
+
         private static void Postfix(RoleManager __instance)
         {
             RoleRegistration.EnsureSheriffRegistered(__instance);
@@ -26,12 +31,15 @@ namespace ClassicUs.SheriffMod
             if (rm == null) return;
             try
             {
-                if (rm.allRoles == null) return;
-
-                foreach (var r in rm.allRoles)
-                    if (r != null && r.TryCast<SheriffRole>() != null) return;
+                if (rm.allRoles != null)
+                {
+                    foreach (var r in rm.allRoles)
+                        if (r != null && r.TryCast<SheriffRole>() != null) return;
+                }
 
                 rm.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
+
+                if (rm.allRoles == null) return;
 
                 foreach (var role in rm.allRoles)
                 {
