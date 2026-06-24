@@ -30,6 +30,8 @@ namespace ClassicUs.SheriffMod
                 go.transform.position = new Vector3(worldBounds.min.x, worldBounds.min.y - gap, versionText.transform.position.z);
 
                 var tmp = go.AddComponent<TextMeshPro>();
+                tmp.font = versionText.font;
+                tmp.fontSharedMaterial = versionText.fontSharedMaterial;
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
                 tmp.fontSize = versionText.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
