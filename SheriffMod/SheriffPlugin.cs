@@ -14,12 +14,12 @@ using UnityEngine;
 
 namespace ClassicUs.SheriffMod
 {
-    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.10")]
+    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.11")]
     [BepInDependency(ManactorPlugin.Guid)]
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
-        public const string Version = "1.0.10";
+        public const string Version = "1.0.11";
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";
@@ -54,6 +54,14 @@ namespace ClassicUs.SheriffMod
 
             new Harmony(Guid).PatchAll();
 
+            Log.LogInfo("Classic Us Sheriff loaded.");
+        }
+
+        public static void EnsureIl2CppTypeRegistered()
+        {
+            if (_il2CppTypeRegistered) return;
+            _il2CppTypeRegistered = true;
+
             try
             {
                 ClassInjector.RegisterTypeInIl2Cpp<SheriffRole>();
@@ -63,9 +71,9 @@ namespace ClassicUs.SheriffMod
             {
                 Log.LogError("SheriffRole registration failed: " + e);
             }
-
-            Log.LogInfo("Classic Us Sheriff loaded.");
         }
+
+        private static bool _il2CppTypeRegistered;
 
         public static void HostBroadcastSettings()
         {

@@ -50,6 +50,7 @@ namespace ClassicUs.SheriffMod
         public static void EnsureSheriffRegistered(RoleManager rm)
         {
             if (rm == null) return;
+            SheriffPlugin.EnsureIl2CppTypeRegistered();
             try
             {
                 if (rm.allRoles != null)
@@ -107,50 +108,55 @@ namespace ClassicUs.SheriffMod
     [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.roleDisplayName), MethodType.Getter)]
     internal static class RoleBehaviour_DisplayName_Patch
     {
-        private static void Postfix(RoleBehaviour __instance, ref string __result)
+        private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
-                __result = "Sheriff";
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = "Sheriff";
+            return false;
         }
     }
 
     [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.roleDescription), MethodType.Getter)]
     internal static class RoleBehaviour_Description_Patch
     {
-        private static void Postfix(RoleBehaviour __instance, ref string __result)
+        private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
-                __result = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
+            return false;
         }
     }
 
     [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.roleDescriptionShort), MethodType.Getter)]
     internal static class RoleBehaviour_DescriptionShort_Patch
     {
-        private static void Postfix(RoleBehaviour __instance, ref string __result)
+        private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
-                __result = "Find and kill the Impostor";
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = "Find and kill the Impostor";
+            return false;
         }
     }
 
     [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.KillCooldown), MethodType.Getter)]
     internal static class RoleBehaviour_KillCooldown_Patch
     {
-        private static void Postfix(RoleBehaviour __instance, ref float __result)
+        private static bool Prefix(RoleBehaviour __instance, ref float __result)
         {
-            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
-                __result = SheriffPlugin.ActiveCooldown;
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = SheriffPlugin.ActiveCooldown;
+            return false;
         }
     }
 
     [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.TeamColor), MethodType.Getter)]
     internal static class RoleBehaviour_TeamColor_Patch
     {
-        private static void Postfix(RoleBehaviour __instance, ref Color __result)
+        private static bool Prefix(RoleBehaviour __instance, ref Color __result)
         {
-            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
-                __result = new Color(1f, 0.65f, 0f, 1f);
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = new Color(1f, 0.65f, 0f, 1f);
+            return false;
         }
     }
 
