@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ClassicUs.Manactor;
 using HarmonyLib;
 using Hazel;
 using Il2CppInterop.Runtime;
@@ -313,21 +314,19 @@ namespace ClassicUs.SheriffMod
         private static bool Prefix(PlayerControl __instance, PlayerControl t)
         {
             if (!SheriffPlugin.IsSheriff(__instance)) return true;
-
-            var client = AmongUsClient.Instance;
-            if (client == null || !client.AmHost) return true;
+            if (t == null || t.Data == null || t.Data.IsDead) return false;
 
             try
             {
-                if (t == null || t.Data == null || t.Data.IsDead) return false;
-
-                if (SheriffPlugin.IsImpostor(t))
-                    __instance.RpcMurderPlayer(t, MurderResultFlags.Succeeded);
-                else
-                    __instance.RpcMurderPlayer(__instance, MurderResultFlags.Succeeded);
-
-                var role = __instance.Data.myRole;
-                if (role != null) role.SetKillTimer(SheriffPlugin.ActiveCooldown);
+                var client = AmongUsClient.Instance;
+                if (client != null && client.AmHost)
+                {
+                    SheriffPlugin.ResolveSheriffKill(__instance, t);
+                }
+                else if (__instance == PlayerControl.LocalPlayer)
+                {
+                    ManactorAPI.SendRpcMethod(SheriffPlugin.RequestKillKey, t.Data.PlayerId);
+                }
             }
             catch (Exception e)
             {

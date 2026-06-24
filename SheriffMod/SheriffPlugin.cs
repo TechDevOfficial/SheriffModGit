@@ -14,16 +14,17 @@ using UnityEngine;
 
 namespace ClassicUs.SheriffMod
 {
-    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.9")]
+    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.10")]
     [BepInDependency(ManactorPlugin.Guid)]
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
-        public const string Version = "1.0.9";
+        public const string Version = "1.0.10";
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";
         public const string RpcSyncSettingsKey = "classicus.sheriff.SyncSettings";
+        public const string RequestKillKey = "classicus.sheriff.RequestKill";
 
         public static ManualLogSource Log;
 
@@ -85,6 +86,45 @@ namespace ClassicUs.SheriffMod
             ActiveCooldown = cooldown;
             Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
             SheriffMenuInjector.UpdateMenuValues();
+        }
+
+        [ManactorRpc(RequestKillKey)]
+        private static void OnSheriffKillRequest(byte senderId, byte targetPlayerId)
+        {
+            var client = AmongUsClient.Instance;
+            if (client == null || !client.AmHost) return;
+
+            PlayerControl sheriff = null, target = null;
+            foreach (var p in PlayerControl.AllPlayerControls)
+            {
+                if (p == null || p.Data == null) continue;
+                if (p.Data.PlayerId == senderId) sheriff = p;
+                if (p.Data.PlayerId == targetPlayerId) target = p;
+            }
+
+            if (sheriff == null || target == null || !IsSheriff(sheriff)) return;
+            ResolveSheriffKill(sheriff, target);
+        }
+
+        public static void ResolveSheriffKill(PlayerControl sheriff, PlayerControl target)
+        {
+            if (sheriff == null || sheriff.Data == null) return;
+            if (target == null || target.Data == null || target.Data.IsDead) return;
+
+            try
+            {
+                if (IsImpostor(target))
+                    sheriff.RpcMurderPlayer(target, MurderResultFlags.Succeeded);
+                else
+                    sheriff.RpcMurderPlayer(sheriff, MurderResultFlags.Succeeded);
+
+                var role = sheriff.Data.myRole;
+                if (role != null) role.SetKillTimer(ActiveCooldown);
+            }
+            catch (Exception e)
+            {
+                Log.LogError("ResolveSheriffKill: " + e);
+            }
         }
 
         public static bool IsImpostor(PlayerControl p)
