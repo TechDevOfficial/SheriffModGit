@@ -51,14 +51,14 @@ namespace ClassicUs.SheriffMod
             try
             {
                 ClassInjector.RegisterTypeInIl2Cpp<SheriffRole>();
-                Log.LogInfo("Tipo SheriffRole registrato in IL2CPP.");
+                Log.LogInfo("SheriffRole type registered in IL2CPP.");
             }
             catch (Exception e)
             {
-                Log.LogError("Registrazione SheriffRole fallita: " + e);
+                Log.LogError("SheriffRole registration failed: " + e);
             }
 
-            Log.LogInfo("Classic Us Sheriff caricato.");
+            Log.LogInfo("Classic Us Sheriff loaded.");
         }
 
         public static void HostBroadcastSettings()
@@ -82,11 +82,11 @@ namespace ClassicUs.SheriffMod
                 w.Write((byte)ActiveCount);
                 w.Write(ActiveCooldown);
                 client.FinishRpcImmediately(w);
-                Log.LogInfo($"Sheriff settings inviate: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+                Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
             }
             catch (Exception e)
             {
-                Log.LogError("Invio settings Sheriff fallito: " + e);
+                Log.LogError("Failed to send Sheriff settings: " + e);
             }
         }
 
@@ -95,7 +95,7 @@ namespace ClassicUs.SheriffMod
             ActiveEnabled = reader.ReadBoolean();
             ActiveCount = reader.ReadByte();
             ActiveCooldown = reader.ReadSingle();
-            Log.LogInfo($"Sheriff settings ricevute: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+            Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
         }
 
         public static bool IsImpostor(PlayerControl p)

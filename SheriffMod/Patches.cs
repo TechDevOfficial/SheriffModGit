@@ -62,11 +62,11 @@ namespace ClassicUs.SheriffMod
                         break;
                     }
                 }
-                SheriffPlugin.Log.LogInfo($"Ruolo Sheriff registrato (codeName='{SheriffPlugin.SheriffRoleName}').");
+                SheriffPlugin.Log.LogInfo($"Sheriff role registered (codeName='{SheriffPlugin.SheriffRoleName}').");
             }
             catch (Exception e)
             {
-                SheriffPlugin.Log.LogError("Registrazione ruolo Sheriff fallita: " + e);
+                SheriffPlugin.Log.LogError("Failed to register Sheriff role: " + e);
             }
         }
     }
@@ -200,7 +200,7 @@ namespace ClassicUs.SheriffMod
                 }
                 catch (Exception e)
                 {
-                    SheriffPlugin.Log.LogError("Assegnazione Sheriff fallita: " + e);
+                    SheriffPlugin.Log.LogError("Failed to assign Sheriffs: " + e);
                 }
             }
         }
@@ -213,7 +213,7 @@ namespace ClassicUs.SheriffMod
             {
                 if (p == null || p.Data == null)
                 {
-                    SheriffPlugin.Log.LogInfo("[AssignSheriffs] Skipping player: null or null data");
+                    SheriffPlugin.Log.LogInfo("[AssignSheriffs] Skipping player due to missing data");
                     continue;
                 }
 
@@ -222,7 +222,7 @@ namespace ClassicUs.SheriffMod
                 var roleName = role != null ? role.roleCodeName : "null";
                 var roleTeam = role != null ? role.RoleTeamType.ToString() : "null";
 
-                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Checking player ID={p.Data.PlayerId} Name={p.Data.PlayerName} Disconnected={p.Data.Disconnected} IsDead={p.Data.IsDead} IsImpostor={isImp} Role={roleName} Team={roleTeam}");
+                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Checking player {p.Data.PlayerId}");
 
                 if (p.Data.Disconnected || p.Data.IsDead) continue;
                 if (isImp) continue;
@@ -287,7 +287,7 @@ namespace ClassicUs.SheriffMod
                     SheriffPlugin.ReadSettings(reader);
                     SheriffMenuInjector.UpdateMenuValues();
                 }
-                catch (Exception e) { SheriffPlugin.Log.LogError("Lettura settings Sheriff: " + e); }
+                catch (Exception e) { SheriffPlugin.Log.LogError("Reading Sheriff settings failed: " + e); }
                 return false;
             }
             return true;
@@ -459,7 +459,7 @@ namespace ClassicUs.SheriffMod
             }
             catch (Exception e)
             {
-                SheriffPlugin.Log.LogError("Errore aggiornamento menu client: " + e);
+                SheriffPlugin.Log.LogError("Error updating client menu: " + e);
             }
         }
 
