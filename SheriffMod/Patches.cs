@@ -369,6 +369,7 @@ namespace ClassicUs.SheriffMod
         public static GameSettingMenu ActiveMenu;
         private static int _injectedCount;
         private static readonly Dictionary<int, float> _scrollerBaseMax = new();
+        private static readonly Dictionary<string, TextMeshPro> _valueTexts = new();
 
         public static void Inject(GameSettingMenu menu)
         {
@@ -449,38 +450,14 @@ namespace ClassicUs.SheriffMod
 
             try
             {
-                var parent = ActiveMenu.AllItems != null && ActiveMenu.AllItems.Count > 0 ? ActiveMenu.AllItems[0].parent : null;
-                if (parent == null) return;
+                if (_valueTexts.TryGetValue("SheriffToggle", out var toggleText) && toggleText != null)
+                    toggleText.text = SheriffPlugin.ActiveEnabled ? "On" : "Off";
 
-                var toggle = parent.Find("SheriffToggle");
-                if (toggle != null)
-                {
-                    var no = toggle.GetComponent<NumberOption>();
-                    if (no != null && no.ValueText != null)
-                    {
-                        no.ValueText.text = SheriffPlugin.ActiveEnabled ? "On" : "Off";
-                    }
-                }
+                if (_valueTexts.TryGetValue("SheriffCount", out var countText) && countText != null)
+                    countText.text = SheriffPlugin.ActiveCount.ToString("0");
 
-                var count = parent.Find("SheriffCount");
-                if (count != null)
-                {
-                    var no = count.GetComponent<NumberOption>();
-                    if (no != null && no.ValueText != null)
-                    {
-                        no.ValueText.text = SheriffPlugin.ActiveCount.ToString("0");
-                    }
-                }
-
-                var cooldown = parent.Find("SheriffCooldown");
-                if (cooldown != null)
-                {
-                    var no = cooldown.GetComponent<NumberOption>();
-                    if (no != null && no.ValueText != null)
-                    {
-                        no.ValueText.text = SheriffPlugin.ActiveCooldown.ToString("0s");
-                    }
-                }
+                if (_valueTexts.TryGetValue("SheriffCooldown", out var cooldownText) && cooldownText != null)
+                    cooldownText.text = SheriffPlugin.ActiveCooldown.ToString("0s");
             }
             catch (Exception e)
             {
@@ -492,15 +469,15 @@ namespace ClassicUs.SheriffMod
         {
             var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
             var existing = parent.Find(name);
-            NumberOption no;
             Transform target;
+            TextMeshPro valueText;
 
             if (existing != null)
             {
                 target = existing;
                 float yPos = menu.YStart - (menu.AllItems.Count + _injectedCount) * menu.YOffset;
                 target.localPosition = new Vector3(target.localPosition.x, yPos, target.localPosition.z);
-                no = target.GetComponent<NumberOption>();
+                _valueTexts.TryGetValue(name, out valueText);
             }
             else
             {
@@ -512,17 +489,19 @@ namespace ClassicUs.SheriffMod
                 go.transform.localRotation = Quaternion.identity;
                 go.SetActive(true);
                 target = go.transform;
-                no = go.GetComponent<NumberOption>();
-                if (no != null) no.enabled = false;
+
+                var no = go.GetComponent<NumberOption>();
+                var titleText = no != null ? no.TitleText : null;
+                valueText = no != null ? no.ValueText : null;
+                if (titleText != null) titleText.text = label;
+                if (no != null) UnityEngine.Object.Destroy(no);
+
+                _valueTexts[name] = valueText;
             }
 
             _injectedCount++;
 
-            if (no != null)
-            {
-                if (no.TitleText != null) no.TitleText.text = label;
-                if (no.ValueText != null) no.ValueText.text = getter() ? "On" : "Off";
-            }
+            if (valueText != null) valueText.text = getter() ? "On" : "Off";
 
             foreach (var pb in target.GetComponentsInChildren<PassiveButton>())
             {
@@ -530,12 +509,12 @@ namespace ClassicUs.SheriffMod
                 pb.gameObject.SetActive(isHost);
                 if (!isHost || pb.OnClick == null) continue;
                 pb.OnClick.RemoveAllListeners();
-                var capturedNo = no;
+                var capturedText = valueText;
                 pb.OnClick.AddListener((UnityAction)(() =>
                 {
                     setter(!getter());
-                    if (capturedNo != null && capturedNo.ValueText != null)
-                        capturedNo.ValueText.text = getter() ? "On" : "Off";
+                    if (capturedText != null)
+                        capturedText.text = getter() ? "On" : "Off";
                 }));
             }
         }
@@ -544,15 +523,15 @@ namespace ClassicUs.SheriffMod
         {
             var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
             var existing = parent.Find(name);
-            NumberOption no;
             Transform target;
+            TextMeshPro valueText;
 
             if (existing != null)
             {
                 target = existing;
                 float yPos = menu.YStart - (menu.AllItems.Count + _injectedCount) * menu.YOffset;
                 target.localPosition = new Vector3(target.localPosition.x, yPos, target.localPosition.z);
-                no = target.GetComponent<NumberOption>();
+                _valueTexts.TryGetValue(name, out valueText);
             }
             else
             {
@@ -564,17 +543,19 @@ namespace ClassicUs.SheriffMod
                 go.transform.localRotation = Quaternion.identity;
                 go.SetActive(true);
                 target = go.transform;
-                no = go.GetComponent<NumberOption>();
-                if (no != null) no.enabled = false;
+
+                var no = go.GetComponent<NumberOption>();
+                var titleText = no != null ? no.TitleText : null;
+                valueText = no != null ? no.ValueText : null;
+                if (titleText != null) titleText.text = label;
+                if (no != null) UnityEngine.Object.Destroy(no);
+
+                _valueTexts[name] = valueText;
             }
 
             _injectedCount++;
 
-            if (no != null)
-            {
-                if (no.TitleText != null) no.TitleText.text = label;
-                if (no.ValueText != null) no.ValueText.text = getter().ToString(format);
-            }
+            if (valueText != null) valueText.text = getter().ToString(format);
 
             var buttons = target.GetComponentsInChildren<PassiveButton>();
             var sorted = new List<PassiveButton>();
@@ -587,15 +568,15 @@ namespace ClassicUs.SheriffMod
             {
                 var dec = sorted[0];
                 var inc = sorted[sorted.Count - 1];
-                var capturedNo = no;
+                var capturedText = valueText;
 
                 dec.OnClick.RemoveAllListeners();
                 dec.OnClick.AddListener((UnityAction)(() =>
                 {
                     float val = Math.Max(min, getter() - step);
                     setter(val);
-                    if (capturedNo != null && capturedNo.ValueText != null)
-                        capturedNo.ValueText.text = getter().ToString(format);
+                    if (capturedText != null)
+                        capturedText.text = getter().ToString(format);
                 }));
 
                 inc.OnClick.RemoveAllListeners();
@@ -603,8 +584,8 @@ namespace ClassicUs.SheriffMod
                 {
                     float val = Math.Min(max, getter() + step);
                     setter(val);
-                    if (capturedNo != null && capturedNo.ValueText != null)
-                        capturedNo.ValueText.text = getter().ToString(format);
+                    if (capturedText != null)
+                        capturedText.text = getter().ToString(format);
                 }));
             }
         }
