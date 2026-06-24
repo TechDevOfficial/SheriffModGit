@@ -38,6 +38,12 @@ namespace ClassicUs.SheriffMod
                 go.name = "SheriffModVersion";
                 go.transform.position = new Vector3(worldBounds.min.x, worldBounds.min.y - gap, versionText.transform.position.z);
 
+                foreach (var comp in go.GetComponents<MonoBehaviour>())
+                {
+                    if (comp == null || comp is TextMeshPro) continue;
+                    UnityEngine.Object.Destroy(comp);
+                }
+
                 var tmp = go.GetComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
