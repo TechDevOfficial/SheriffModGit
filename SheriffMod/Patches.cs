@@ -10,11 +10,12 @@ using UnityEngine.Events;
 
 namespace ClassicUs.SheriffMod
 {
-    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CoStartGame))]
-    internal static class AmongUsClient_CoStartGame_Patch
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
+    internal static class PlayerControl_FixedUpdate_RoleRegistration_Patch
     {
-        private static void Prefix()
+        private static void Prefix(PlayerControl __instance)
         {
+            if (__instance != PlayerControl.LocalPlayer) return;
             RoleRegistration.EnsureSheriffRegistered(RoleManager.Instance);
         }
     }
