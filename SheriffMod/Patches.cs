@@ -10,6 +10,15 @@ using UnityEngine.Events;
 
 namespace ClassicUs.SheriffMod
 {
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRole))]
+    internal static class RoleManager_AssignRole_Patch
+    {
+        private static void Prefix(RoleManager __instance, PlayerControl player, string roleName)
+        {
+            RoleRegistration.EnsureSheriffRegistered(__instance);
+        }
+    }
+
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
     internal static class RoleManager_Start_Patch
     {
