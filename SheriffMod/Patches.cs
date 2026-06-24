@@ -246,6 +246,28 @@ namespace ClassicUs.SheriffMod
         }
     }
 
+    [HarmonyPatch(typeof(ExileController), nameof(ExileController.Begin))]
+    internal static class ExileController_Begin_Patch
+    {
+        private static void Postfix(ExileController __instance, GameData.PlayerInfo exiled, bool tie)
+        {
+            if (__instance == null || exiled == null) return;
+            try
+            {
+                var role = exiled.myRole;
+                if (role == null || role.TryCast<SheriffRole>() == null) return;
+
+                string text = $"{exiled.PlayerName} was the Sheriff.";
+                if (__instance.Text != null) __instance.Text.Text = text;
+                __instance.completeString = text;
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("ExileController.Begin Sheriff text patch: " + e);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.CoBegin))]
     internal static class IntroCutscene_CoBegin_Patch
     {
