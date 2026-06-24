@@ -25,8 +25,8 @@ Build the project using the dotnet CLI:
 dotnet build -c Release
 ```
 
-The output DLL is generated in the build output directory:
-`bin/Release/net6.0/ClassicUs.SheriffMod.dll`
+The output DLL is generated in the project's build output directory:
+`SheriffMod/bin/Release/net6.0/ClassicUs.SheriffMod.dll`
 
 You must manually copy this DLL to your game's BepInEx plugins directory:
 `<GameDir>\BepInEx\plugins\`
