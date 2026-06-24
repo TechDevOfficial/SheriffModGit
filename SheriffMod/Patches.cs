@@ -10,17 +10,6 @@ using UnityEngine.Events;
 
 namespace ClassicUs.SheriffMod
 {
-    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRole))]
-    internal static class RoleManager_AssignRole_Patch
-    {
-        private static bool Prefix(RoleManager __instance, PlayerControl player, string roleName)
-        {
-            if (__instance == null) return true;
-            RoleRegistration.EnsureSheriffRegistered(__instance);
-            return true;
-        }
-    }
-
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
     internal static class RoleManager_Start_Patch
     {
@@ -201,18 +190,6 @@ namespace ClassicUs.SheriffMod
             {
                 SheriffPlugin.Log.LogError("[AssignSheriffs] RoleManager.Instance is null");
                 return;
-            }
-
-            bool hasSheriff = false;
-            foreach (var r in rm.allRoles)
-                if (r != null && r.TryCast<SheriffRole>() != null) { hasSheriff = true; break; }
-
-            if (!hasSheriff)
-            {
-                rm.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
-                foreach (var role in rm.allRoles)
-                    if (role != null && role.TryCast<SheriffRole>() != null)
-                        { SheriffPlugin.SheriffRoleName = role.roleCodeName; break; }
             }
 
             var candidates = new List<PlayerControl>();
