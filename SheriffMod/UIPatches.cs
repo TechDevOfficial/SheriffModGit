@@ -14,18 +14,19 @@ namespace ClassicUs.SheriffMod
             {
                 if (__instance == null || __instance.text == null) return;
 
+                if (__instance.text.transform.Find("SheriffModVersion") != null) return;
+
                 var go = new GameObject("SheriffModVersion");
-                go.transform.SetParent(__instance.text.transform.parent, false);
+                go.transform.SetParent(__instance.text.transform, false);
+                go.transform.localPosition = new Vector3(0f, -0.18f, 0f);
+                go.transform.localScale = Vector3.one;
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
-                tmp.fontSize = __instance.text.fontSize * 0.85f;
+                tmp.fontSize = __instance.text.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
                 tmp.alignment = TextAlignmentOptions.Left;
-
-                var pos = __instance.text.transform.localPosition;
-                tmp.transform.localPosition = new Vector3(pos.x, pos.y - 0.35f, pos.z);
-                tmp.transform.localScale = __instance.text.transform.localScale;
+                tmp.enableWordWrapping = false;
             }
             catch (Exception e)
             {
@@ -33,6 +34,7 @@ namespace ClassicUs.SheriffMod
             }
         }
     }
+
 
     [HarmonyPatch(typeof(PingTracker), nameof(PingTracker.Update))]
     internal static class PingTracker_Update_Patch

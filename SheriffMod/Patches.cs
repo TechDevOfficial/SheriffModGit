@@ -35,23 +35,15 @@ namespace ClassicUs.SheriffMod
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
     internal static class RoleManager_Start_Patch
     {
-        private static System.Collections.Generic.HashSet<IntPtr> _initialized = new System.Collections.Generic.HashSet<IntPtr>();
-
-        private static bool Prefix(RoleManager __instance)
-        {
-            if (__instance == null) return true;
-            if (_initialized.Contains(__instance.Pointer)) return false;
-            return true;
-        }
-
         private static void Postfix(RoleManager __instance)
         {
             if (__instance == null) return;
-            if (_initialized.Contains(__instance.Pointer)) return;
-            _initialized.Add(__instance.Pointer);
 
             try
             {
+                foreach (var r in __instance.allRoles)
+                    if (r != null && r.TryCast<SheriffRole>() != null) return;
+
                 __instance.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
 
                 foreach (var role in __instance.allRoles)
@@ -62,7 +54,6 @@ namespace ClassicUs.SheriffMod
                         break;
                     }
                 }
-                SheriffPlugin.Log.LogInfo($"Sheriff role registered (codeName='{SheriffPlugin.SheriffRoleName}').");
             }
             catch (Exception e)
             {
@@ -207,32 +198,35 @@ namespace ClassicUs.SheriffMod
 
         private static void AssignSheriffs()
         {
-            var candidates = new List<PlayerControl>();
-            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Start. AllPlayerControls count={PlayerControl.AllPlayerControls.Count}");
-            foreach (var p in PlayerControl.AllPlayerControls)
+            var rm = RoleManager.Instance;
+            if (rm == null)
             {
-                if (p == null || p.Data == null)
-                {
-                    SheriffPlugin.Log.LogInfo("[AssignSheriffs] Skipping player due to missing data");
-                    continue;
-                }
-
-                var isImp = SheriffPlugin.IsImpostor(p);
-                var role = p.Data.myRole;
-                var roleName = role != null ? role.roleCodeName : "null";
-                var roleTeam = role != null ? role.RoleTeamType.ToString() : "null";
-
-                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Checking player {p.Data.PlayerId}");
-
-                if (p.Data.Disconnected || p.Data.IsDead) continue;
-                if (isImp) continue;
-                if (role == null) continue;
-                if (role.RoleTeamType != RoleTeamTypes.Crewmate) continue;
-
-                candidates.Add(p);
+                SheriffPlugin.Log.LogError("[AssignSheriffs] RoleManager.Instance is null");
+                return;
             }
 
-            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Candidates count={candidates.Count}");
+            bool hasSheriff = false;
+            foreach (var r in rm.allRoles)
+                if (r != null && r.TryCast<SheriffRole>() != null) { hasSheriff = true; break; }
+
+            if (!hasSheriff)
+            {
+                rm.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
+                foreach (var role in rm.allRoles)
+                    if (role != null && role.TryCast<SheriffRole>() != null)
+                        { SheriffPlugin.SheriffRoleName = role.roleCodeName; break; }
+            }
+
+            var candidates = new List<PlayerControl>();
+            foreach (var p in PlayerControl.AllPlayerControls)
+            {
+                if (p == null || p.Data == null || p.Data.Disconnected || p.Data.IsDead) continue;
+                var role = p.Data.myRole;
+                if (role == null) continue;
+                if (role.RoleTeamType != RoleTeamTypes.Crewmate) continue;
+                if (SheriffPlugin.IsImpostor(p)) continue;
+                candidates.Add(p);
+            }
 
             var rng = new System.Random();
             for (int i = candidates.Count - 1; i > 0; i--)
@@ -242,12 +236,12 @@ namespace ClassicUs.SheriffMod
             }
 
             int toAssign = Math.Min(SheriffPlugin.ActiveCount, candidates.Count);
-            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Assigning {toAssign} Sheriffs");
+            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Assigning {toAssign} Sheriff(s) from {candidates.Count} candidates");
             for (int i = 0; i < toAssign; i++)
             {
                 var p = candidates[i];
-                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Assegno Sheriff a playerId={p.Data.PlayerId}");
-                p.RpcSetRole(SheriffPlugin.SheriffRoleName);
+                rm.AssignRole(p, SheriffPlugin.SheriffRoleName);
+                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Sheriff assigned to playerId={p.Data.PlayerId}");
             }
         }
     }
@@ -465,133 +459,112 @@ namespace ClassicUs.SheriffMod
 
         private static void InjectToggle(GameSettingMenu menu, Transform parent, NumberOption template, string name, string label, Func<bool> getter, Action<bool> setter)
         {
-            var existing = parent.Find(name);
             var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+            var existing = parent.Find(name);
+            NumberOption no;
+            Transform target;
 
             if (existing != null)
             {
+                target = existing;
                 float yPos = menu.YStart - menu.AllItems.Count * menu.YOffset;
-                existing.localPosition = new Vector3(existing.localPosition.x, yPos, existing.localPosition.z);
-                if (!menu.AllItems.Contains(existing))
-                {
-                    menu.AllItems.Add(existing);
-                }
-
-                var no = existing.GetComponent<NumberOption>();
-                if (no != null && no.ValueText != null)
-                {
-                    no.ValueText.text = getter() ? "On" : "Off";
-                }
-
-                foreach (var pb in existing.GetComponentsInChildren<PassiveButton>())
-                {
-                    if (pb != null) pb.gameObject.SetActive(isHost);
-                }
-                return;
+                target.localPosition = new Vector3(target.localPosition.x, yPos, target.localPosition.z);
+                if (!menu.AllItems.Contains(target)) menu.AllItems.Add(target);
+                no = target.GetComponent<NumberOption>();
             }
-
-            var cloneGo = UnityEngine.Object.Instantiate(template.gameObject, parent);
-            cloneGo.name = name;
-            float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
-            cloneGo.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
-            cloneGo.transform.localScale = Vector3.one;
-            cloneGo.transform.localRotation = Quaternion.identity;
-            cloneGo.SetActive(true);
-
-            var noComp = cloneGo.GetComponent<NumberOption>();
-            if (noComp != null)
+            else
             {
-                noComp.enabled = false;
-                if (noComp.TitleText != null) noComp.TitleText.text = label;
-                if (noComp.ValueText != null) noComp.ValueText.text = getter() ? "On" : "Off";
+                var go = UnityEngine.Object.Instantiate(template.gameObject, parent);
+                go.name = name;
+                float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                go.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
+                go.transform.localScale = Vector3.one;
+                go.transform.localRotation = Quaternion.identity;
+                go.SetActive(true);
+                target = go.transform;
+                no = go.GetComponent<NumberOption>();
+                if (no != null) no.enabled = false;
+                menu.AllItems.Add(target);
             }
 
-            foreach (var pb in cloneGo.GetComponentsInChildren<PassiveButton>())
+            if (no != null)
+            {
+                if (no.TitleText != null) no.TitleText.text = label;
+                if (no.ValueText != null) no.ValueText.text = getter() ? "On" : "Off";
+            }
+
+            foreach (var pb in target.GetComponentsInChildren<PassiveButton>())
             {
                 if (pb == null) continue;
-                if (!isHost)
-                {
-                    pb.gameObject.SetActive(false);
-                    continue;
-                }
-                if (pb.OnClick == null) continue;
+                pb.gameObject.SetActive(isHost);
+                if (!isHost || pb.OnClick == null) continue;
                 pb.OnClick.RemoveAllListeners();
+                var capturedNo = no;
                 pb.OnClick.AddListener((UnityAction)(() =>
                 {
                     setter(!getter());
-                    if (noComp != null && noComp.ValueText != null) noComp.ValueText.text = getter() ? "On" : "Off";
+                    if (capturedNo != null && capturedNo.ValueText != null)
+                        capturedNo.ValueText.text = getter() ? "On" : "Off";
                 }));
             }
-
-            menu.AllItems.Add(cloneGo.transform);
         }
 
         private static void InjectNumeric(GameSettingMenu menu, Transform parent, NumberOption template, string name, string label, float step, float min, float max, string format, Func<float> getter, Action<float> setter)
         {
-            var existing = parent.Find(name);
             var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+            var existing = parent.Find(name);
+            NumberOption no;
+            Transform target;
 
             if (existing != null)
             {
+                target = existing;
                 float yPos = menu.YStart - menu.AllItems.Count * menu.YOffset;
-                existing.localPosition = new Vector3(existing.localPosition.x, yPos, existing.localPosition.z);
-                if (!menu.AllItems.Contains(existing))
-                {
-                    menu.AllItems.Add(existing);
-                }
-
-                var no = existing.GetComponent<NumberOption>();
-                if (no != null && no.ValueText != null)
-                {
-                    no.ValueText.text = getter().ToString(format);
-                }
-
-                foreach (var pb in existing.GetComponentsInChildren<PassiveButton>())
-                {
-                    if (pb != null) pb.gameObject.SetActive(isHost);
-                }
-                return;
+                target.localPosition = new Vector3(target.localPosition.x, yPos, target.localPosition.z);
+                if (!menu.AllItems.Contains(target)) menu.AllItems.Add(target);
+                no = target.GetComponent<NumberOption>();
+            }
+            else
+            {
+                var go = UnityEngine.Object.Instantiate(template.gameObject, parent);
+                go.name = name;
+                float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                go.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
+                go.transform.localScale = Vector3.one;
+                go.transform.localRotation = Quaternion.identity;
+                go.SetActive(true);
+                target = go.transform;
+                no = go.GetComponent<NumberOption>();
+                if (no != null) no.enabled = false;
+                menu.AllItems.Add(target);
             }
 
-            var cloneGo = UnityEngine.Object.Instantiate(template.gameObject, parent);
-            cloneGo.name = name;
-            float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
-            cloneGo.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
-            cloneGo.transform.localScale = Vector3.one;
-            cloneGo.transform.localRotation = Quaternion.identity;
-            cloneGo.SetActive(true);
-
-            var noComp = cloneGo.GetComponent<NumberOption>();
-            if (noComp != null)
+            if (no != null)
             {
-                noComp.enabled = false;
-                if (noComp.TitleText != null) noComp.TitleText.text = label;
-                if (noComp.ValueText != null) noComp.ValueText.text = getter().ToString(format);
+                if (no.TitleText != null) no.TitleText.text = label;
+                if (no.ValueText != null) no.ValueText.text = getter().ToString(format);
             }
 
-            var buttons = cloneGo.GetComponentsInChildren<PassiveButton>();
-            if (!isHost)
-            {
-                foreach (var pb in buttons)
-                {
-                    if (pb != null) pb.gameObject.SetActive(false);
-                }
-            }
-            else if (buttons.Length >= 2)
-            {
-                var sorted = new List<PassiveButton>();
-                foreach (var b in buttons) sorted.Add(b);
-                sorted.Sort((a, b) => a.transform.localPosition.x.CompareTo(b.transform.localPosition.x));
+            var buttons = target.GetComponentsInChildren<PassiveButton>();
+            var sorted = new List<PassiveButton>();
+            foreach (var b in buttons) if (b != null) sorted.Add(b);
+            sorted.Sort((a, b) => a.transform.localPosition.x.CompareTo(b.transform.localPosition.x));
 
+            foreach (var pb in sorted) pb.gameObject.SetActive(isHost);
+
+            if (isHost && sorted.Count >= 2)
+            {
                 var dec = sorted[0];
                 var inc = sorted[sorted.Count - 1];
+                var capturedNo = no;
 
                 dec.OnClick.RemoveAllListeners();
                 dec.OnClick.AddListener((UnityAction)(() =>
                 {
                     float val = Math.Max(min, getter() - step);
                     setter(val);
-                    if (noComp != null && noComp.ValueText != null) noComp.ValueText.text = getter().ToString(format);
+                    if (capturedNo != null && capturedNo.ValueText != null)
+                        capturedNo.ValueText.text = getter().ToString(format);
                 }));
 
                 inc.OnClick.RemoveAllListeners();
@@ -599,11 +572,10 @@ namespace ClassicUs.SheriffMod
                 {
                     float val = Math.Min(max, getter() + step);
                     setter(val);
-                    if (noComp != null && noComp.ValueText != null) noComp.ValueText.text = getter().ToString(format);
+                    if (capturedNo != null && capturedNo.ValueText != null)
+                        capturedNo.ValueText.text = getter().ToString(format);
                 }));
             }
-
-            menu.AllItems.Add(cloneGo.transform);
         }
     }
 }
