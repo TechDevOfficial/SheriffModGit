@@ -12,20 +12,25 @@ namespace ClassicUs.SheriffMod
         {
             try
             {
-                if (__instance == null || __instance.text == null) return;
+                var versionText = __instance.text;
+                if (__instance == null || versionText == null) return;
 
-                if (__instance.text.transform.Find("SheriffModVersion") != null) return;
+                if (versionText.transform.Find("SheriffModVersion") != null) return;
+
+                versionText.ForceMeshUpdate(false, false);
+                float lineHeight = versionText.textBounds.size.y;
+                if (lineHeight <= 0f) lineHeight = versionText.fontSize * 0.01f;
 
                 var go = new GameObject("SheriffModVersion");
-                go.transform.SetParent(__instance.text.transform, false);
-                go.transform.localPosition = new Vector3(0f, -0.18f, 0f);
+                go.transform.SetParent(versionText.transform, false);
+                go.transform.localPosition = new Vector3(0f, -lineHeight * 1.1f, 0f);
                 go.transform.localScale = Vector3.one;
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
-                tmp.fontSize = __instance.text.fontSize;
+                tmp.fontSize = versionText.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
-                tmp.alignment = TextAlignmentOptions.Left;
+                tmp.alignment = versionText.alignment;
                 tmp.enableWordWrapping = false;
             }
             catch (Exception e)

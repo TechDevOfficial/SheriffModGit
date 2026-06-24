@@ -16,18 +16,7 @@ namespace ClassicUs.SheriffMod
         private static bool Prefix(RoleManager __instance, PlayerControl player, string roleName)
         {
             if (__instance == null) return true;
-            try
-            {
-                if (__instance.allRoles == null || __instance.allRoles.Count == 0)
-                {
-                    SheriffPlugin.Log.LogInfo("RoleManager.AssignRole Prefix: allRoles is empty, forcing Start()");
-                    __instance.Start();
-                }
-            }
-            catch (Exception e)
-            {
-                SheriffPlugin.Log.LogError("Forcing RoleManager.Start in AssignRole failed: " + e);
-            }
+            RoleRegistration.EnsureSheriffRegistered(__instance);
             return true;
         }
     }
@@ -37,16 +26,28 @@ namespace ClassicUs.SheriffMod
     {
         private static void Postfix(RoleManager __instance)
         {
-            if (__instance == null) return;
+            RoleRegistration.EnsureSheriffRegistered(__instance);
+        }
+    }
 
+    internal static class RoleRegistration
+    {
+        // Registra Sheriff in allRoles senza richiamare RoleManager.Start() per intero:
+        // farlo in Freeplay (dove Start() gira in un contesto diverso da una partita online)
+        // mandava in crash il gioco perché ri-eseguiva tutta l'inizializzazione vanilla a metà.
+        public static void EnsureSheriffRegistered(RoleManager rm)
+        {
+            if (rm == null) return;
             try
             {
-                foreach (var r in __instance.allRoles)
+                if (rm.allRoles == null) return;
+
+                foreach (var r in rm.allRoles)
                     if (r != null && r.TryCast<SheriffRole>() != null) return;
 
-                __instance.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
+                rm.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
 
-                foreach (var role in __instance.allRoles)
+                foreach (var role in rm.allRoles)
                 {
                     if (role != null && role.TryCast<SheriffRole>() != null)
                     {
