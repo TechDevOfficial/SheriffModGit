@@ -368,6 +368,7 @@ namespace ClassicUs.SheriffMod
     {
         public static GameSettingMenu ActiveMenu;
         private static int _injectedCount;
+        private static readonly Dictionary<int, float> _scrollerBaseMax = new();
 
         public static void Inject(GameSettingMenu menu)
         {
@@ -430,8 +431,15 @@ namespace ClassicUs.SheriffMod
             var scroller = parent.GetComponentInParent<Scroller>();
             if (scroller != null && scroller.YBounds != null)
             {
+                int id = scroller.GetInstanceID();
+                if (!_scrollerBaseMax.TryGetValue(id, out float baseMax))
+                {
+                    baseMax = scroller.YBounds.max;
+                    _scrollerBaseMax[id] = baseMax;
+                }
+
                 var yb = scroller.YBounds;
-                scroller.YBounds = new FloatRange(yb.min, yb.max + 1.5f);
+                scroller.YBounds = new FloatRange(yb.min, baseMax + 1.5f);
             }
         }
 
