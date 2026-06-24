@@ -17,16 +17,22 @@ namespace ClassicUs.SheriffMod
 
                 if (versionText.transform.Find("SheriffModVersion") != null) return;
 
+                versionText.ForceMeshUpdate(false, false);
+                var rend = versionText.GetComponent<MeshRenderer>();
+                Bounds worldBounds = rend != null ? rend.bounds : new Bounds(versionText.transform.position, Vector3.zero);
+                float gap = (worldBounds.size.y > 0f ? worldBounds.size.y : 0.3f) * 0.25f;
+                float rightShift = (worldBounds.size.y > 0f ? worldBounds.size.y : 0.3f) * 0.23f;
+
                 var go = new GameObject("SheriffModVersion");
-                go.transform.SetParent(versionText.transform, false);
-                go.transform.localPosition = new Vector3(0f, versionText.fontSize * 0.1f, 0f);
-                go.transform.localRotation = Quaternion.identity;
+                go.transform.SetParent(versionText.transform, true);
                 go.transform.localScale = Vector3.one;
+                go.transform.localRotation = Quaternion.identity;
+                go.transform.position = new Vector3(versionText.transform.position.x + rightShift, worldBounds.min.y - gap, versionText.transform.position.z);
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.font = versionText.font;
                 tmp.fontSharedMaterial = versionText.fontSharedMaterial;
-                tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
+                tmp.text = $"loaded SheriffMod v{SheriffPlugin.Version}";
                 tmp.fontSize = versionText.fontSize;
                 tmp.color = new Color(1f, 0.65f, 0f, 1f);
                 tmp.alignment = versionText.alignment;
