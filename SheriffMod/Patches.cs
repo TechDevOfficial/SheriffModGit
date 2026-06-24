@@ -289,25 +289,6 @@ namespace ClassicUs.SheriffMod
         }
     }
 
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
-    internal static class PlayerControl_HandleRpc_Patch
-    {
-        private static bool Prefix(byte callId, MessageReader reader)
-        {
-            if (callId == SheriffPlugin.RpcSyncSettings)
-            {
-                try
-                {
-                    SheriffPlugin.ReadSettings(reader);
-                    SheriffMenuInjector.UpdateMenuValues();
-                }
-                catch (Exception e) { SheriffPlugin.Log.LogError("Reading Sheriff settings failed: " + e); }
-                return false;
-            }
-            return true;
-        }
-    }
-
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
     internal static class AmongUsClient_OnPlayerJoined_Patch
     {

@@ -14,12 +14,12 @@ using UnityEngine;
 
 namespace ClassicUs.SheriffMod
 {
-    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.1")]
+    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.2")]
     [BepInDependency(ClassicUs.Manactor.ManactorPlugin.Guid)]
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";
@@ -49,6 +49,7 @@ namespace ClassicUs.SheriffMod
                     new AcceptableValueRange<float>(5f, 60f)));
 
             ClassicUs.Manactor.ManactorAPI.Register(RoleModName, Version);
+            ClassicUs.Manactor.ManactorAPI.RegisterRpcHandler(RpcSyncSettings, OnSyncSettingsRpc);
 
             new Harmony(Guid).PatchAll();
 
@@ -71,35 +72,30 @@ namespace ClassicUs.SheriffMod
             ActiveCount = CfgCount.Value;
             ActiveCooldown = CfgCooldown.Value;
 
-            var client = AmongUsClient.Instance;
-            var local = PlayerControl.LocalPlayer;
-            if (client == null || local == null)
+            ClassicUs.Manactor.ManactorAPI.SendRpc(RpcSyncSettings, w =>
             {
-                Log.LogWarning($"[HostBroadcastSettings] client={client != null} local={local != null} - skipping broadcast");
-                return;
-            }
-
-            try
-            {
-                MessageWriter w = client.StartRpcImmediately(local.NetId, RpcSyncSettings, SendOption.Reliable, -1);
                 w.Write(ActiveEnabled);
                 w.Write((byte)ActiveCount);
                 w.Write(ActiveCooldown);
-                client.FinishRpcImmediately(w);
-                Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+            });
+
+            Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+        }
+
+        private static void OnSyncSettingsRpc(byte senderId, MessageReader reader)
+        {
+            try
+            {
+                ActiveEnabled = reader.ReadBoolean();
+                ActiveCount = reader.ReadByte();
+                ActiveCooldown = reader.ReadSingle();
+                Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+                SheriffMenuInjector.UpdateMenuValues();
             }
             catch (Exception e)
             {
-                Log.LogError("Failed to send Sheriff settings: " + e);
+                Log.LogError("Reading Sheriff settings failed: " + e);
             }
-        }
-
-        public static void ReadSettings(MessageReader reader)
-        {
-            ActiveEnabled = reader.ReadBoolean();
-            ActiveCount = reader.ReadByte();
-            ActiveCooldown = reader.ReadSingle();
-            Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
         }
 
         public static bool IsImpostor(PlayerControl p)
