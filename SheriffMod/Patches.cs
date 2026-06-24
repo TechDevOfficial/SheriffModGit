@@ -20,6 +20,16 @@ namespace ClassicUs.SheriffMod
         }
     }
 
+    [HarmonyPatch(typeof(HudManager), nameof(HudManager.FixedUpdate))]
+    internal static class HudManager_FixedUpdate_RoleRegistration_Patch
+    {
+        private static void Prefix()
+        {
+            if (RoleManager.InstanceExists)
+                RoleRegistration.EnsureSheriffRegistered(RoleManager.Instance);
+        }
+    }
+
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
     internal static class RoleManager_Start_Patch
     {
