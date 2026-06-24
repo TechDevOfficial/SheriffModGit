@@ -1,0 +1,609 @@
+using System;
+using System.Collections.Generic;
+using HarmonyLib;
+using Hazel;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using TMPro;
+using UnityEngine;
+using UnityEngine.Events;
+
+namespace ClassicUs.SheriffMod
+{
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRole))]
+    internal static class RoleManager_AssignRole_Patch
+    {
+        private static bool Prefix(RoleManager __instance, PlayerControl player, string roleName)
+        {
+            if (__instance == null) return true;
+            try
+            {
+                if (__instance.allRoles == null || __instance.allRoles.Count == 0)
+                {
+                    SheriffPlugin.Log.LogInfo("RoleManager.AssignRole Prefix: allRoles is empty, forcing Start()");
+                    __instance.Start();
+                }
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("Forcing RoleManager.Start in AssignRole failed: " + e);
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
+    internal static class RoleManager_Start_Patch
+    {
+        private static System.Collections.Generic.HashSet<IntPtr> _initialized = new System.Collections.Generic.HashSet<IntPtr>();
+
+        private static bool Prefix(RoleManager __instance)
+        {
+            if (__instance == null) return true;
+            if (_initialized.Contains(__instance.Pointer)) return false;
+            return true;
+        }
+
+        private static void Postfix(RoleManager __instance)
+        {
+            if (__instance == null) return;
+            if (_initialized.Contains(__instance.Pointer)) return;
+            _initialized.Add(__instance.Pointer);
+
+            try
+            {
+                __instance.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
+
+                foreach (var role in __instance.allRoles)
+                {
+                    if (role != null && role.TryCast<SheriffRole>() != null)
+                    {
+                        SheriffPlugin.SheriffRoleName = role.roleCodeName;
+                        break;
+                    }
+                }
+                SheriffPlugin.Log.LogInfo($"Ruolo Sheriff registrato (codeName='{SheriffPlugin.SheriffRoleName}').");
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("Registrazione ruolo Sheriff fallita: " + e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.OnAssign))]
+    internal static class RoleBehaviour_OnAssign_Patch
+    {
+        private static void Postfix(RoleBehaviour __instance, PlayerControl player)
+        {
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return;
+            try
+            {
+                __instance.RoleTeamType = RoleTeamTypes.Crewmate;
+                __instance.CanUseKillButton = true;
+                __instance.CanVent = false;
+                __instance.CanSabotage = false;
+
+                var enemies = new Il2CppStructArray<RoleTeamTypes>(3);
+                enemies[0] = RoleTeamTypes.Crewmate;
+                enemies[1] = RoleTeamTypes.Impostor;
+                enemies[2] = RoleTeamTypes.Neutral;
+                __instance.enemyTeams = enemies;
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("Config Sheriff OnAssign: " + e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.roleDisplayName), MethodType.Getter)]
+    internal static class RoleBehaviour_DisplayName_Patch
+    {
+        private static void Postfix(RoleBehaviour __instance, ref string __result)
+        {
+            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
+                __result = "Sheriff";
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.roleDescription), MethodType.Getter)]
+    internal static class RoleBehaviour_Description_Patch
+    {
+        private static void Postfix(RoleBehaviour __instance, ref string __result)
+        {
+            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
+                __result = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.roleDescriptionShort), MethodType.Getter)]
+    internal static class RoleBehaviour_DescriptionShort_Patch
+    {
+        private static void Postfix(RoleBehaviour __instance, ref string __result)
+        {
+            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
+                __result = "Find and kill the Impostor";
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.KillCooldown), MethodType.Getter)]
+    internal static class RoleBehaviour_KillCooldown_Patch
+    {
+        private static void Postfix(RoleBehaviour __instance, ref float __result)
+        {
+            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
+                __result = SheriffPlugin.ActiveCooldown;
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.TeamColor), MethodType.Getter)]
+    internal static class RoleBehaviour_TeamColor_Patch
+    {
+        private static void Postfix(RoleBehaviour __instance, ref Color __result)
+        {
+            if (__instance != null && __instance.TryCast<SheriffRole>() != null)
+                __result = new Color(1f, 0.65f, 0f, 1f);
+        }
+    }
+
+    [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.GetTeamColor))]
+    internal static class IntroCutscene_GetTeamColor_Patch
+    {
+        private static void Postfix(RoleBehaviour role, ref Color __result)
+        {
+            if (role != null && role.TryCast<SheriffRole>() != null)
+                __result = new Color(1f, 0.65f, 0f, 1f);
+        }
+    }
+
+    [HarmonyPatch(typeof(IntroCutscene._BeginTeam_d__18), nameof(IntroCutscene._BeginTeam_d__18.MoveNext))]
+    internal static class IntroCutscene_BeginTeam_MoveNext_Patch
+    {
+        private static void Postfix(IntroCutscene._BeginTeam_d__18 __instance, ref bool __result)
+        {
+            if (!__result || __instance == null || __instance.__4__this == null) return;
+
+            var local = PlayerControl.LocalPlayer;
+            if (local != null && SheriffPlugin.IsSheriff(local))
+            {
+                __instance.__4__this.Title.text = "Sheriff";
+                __instance.__4__this.Title.color = new Color(1f, 0.65f, 0f, 1f);
+                __instance.__4__this.DescriptionText.text = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRolesForTeam))]
+    internal static class RoleManager_AssignRolesForTeam_Patch
+    {
+        private static void Prefix(RoleManager __instance, RoleTeamTypes type, int max)
+        {
+            var client = AmongUsClient.Instance;
+            if (client == null || !client.AmHost) return;
+
+            SheriffPlugin.HostBroadcastSettings();
+        }
+
+        private static void Postfix(RoleManager __instance, RoleTeamTypes type, int max)
+        {
+            var client = AmongUsClient.Instance;
+            if (client == null || !client.AmHost) return;
+
+            if (type == RoleTeamTypes.Crewmate)
+            {
+                if (!SheriffPlugin.ActiveEnabled || SheriffPlugin.ActiveCount <= 0) return;
+
+                try
+                {
+                    AssignSheriffs();
+                }
+                catch (Exception e)
+                {
+                    SheriffPlugin.Log.LogError("Assegnazione Sheriff fallita: " + e);
+                }
+            }
+        }
+
+        private static void AssignSheriffs()
+        {
+            var candidates = new List<PlayerControl>();
+            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Start. AllPlayerControls count={PlayerControl.AllPlayerControls.Count}");
+            foreach (var p in PlayerControl.AllPlayerControls)
+            {
+                if (p == null || p.Data == null)
+                {
+                    SheriffPlugin.Log.LogInfo("[AssignSheriffs] Skipping player: null or null data");
+                    continue;
+                }
+
+                var isImp = SheriffPlugin.IsImpostor(p);
+                var role = p.Data.myRole;
+                var roleName = role != null ? role.roleCodeName : "null";
+                var roleTeam = role != null ? role.RoleTeamType.ToString() : "null";
+
+                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Checking player ID={p.Data.PlayerId} Name={p.Data.PlayerName} Disconnected={p.Data.Disconnected} IsDead={p.Data.IsDead} IsImpostor={isImp} Role={roleName} Team={roleTeam}");
+
+                if (p.Data.Disconnected || p.Data.IsDead) continue;
+                if (isImp) continue;
+                if (role == null) continue;
+                if (role.RoleTeamType != RoleTeamTypes.Crewmate) continue;
+
+                candidates.Add(p);
+            }
+
+            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Candidates count={candidates.Count}");
+
+            var rng = new System.Random();
+            for (int i = candidates.Count - 1; i > 0; i--)
+            {
+                int j = rng.Next(i + 1);
+                (candidates[i], candidates[j]) = (candidates[j], candidates[i]);
+            }
+
+            int toAssign = Math.Min(SheriffPlugin.ActiveCount, candidates.Count);
+            SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Assigning {toAssign} Sheriffs");
+            for (int i = 0; i < toAssign; i++)
+            {
+                var p = candidates[i];
+                SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Assegno Sheriff a playerId={p.Data.PlayerId}");
+                p.RpcSetRole(SheriffPlugin.SheriffRoleName);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.CoBegin))]
+    internal static class IntroCutscene_CoBegin_Patch
+    {
+        private static void Prefix()
+        {
+            try
+            {
+                SheriffPlugin.Log.LogInfo($"[Diag] IntroCutscene.CoBegin. AmHost={AmongUsClient.Instance?.AmHost} ActiveEnabled={SheriffPlugin.ActiveEnabled} ActiveCount={SheriffPlugin.ActiveCount}");
+                foreach (var p in PlayerControl.AllPlayerControls)
+                {
+                    if (p == null || p.Data == null) continue;
+                    var roleName = p.Data.myRole != null ? p.Data.myRole.roleCodeName : "null";
+                    var roleTeam = p.Data.myRole != null ? p.Data.myRole.RoleTeamType.ToString() : "null";
+                    SheriffPlugin.Log.LogInfo($"[Diag] Player ID={p.Data.PlayerId} Name={p.Data.PlayerName} Role={roleName} Team={roleTeam}");
+                }
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("[Diag] IntroCutscene.CoBegin log error: " + e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
+    internal static class PlayerControl_HandleRpc_Patch
+    {
+        private static bool Prefix(byte callId, MessageReader reader)
+        {
+            if (callId == SheriffPlugin.RpcSyncSettings)
+            {
+                try
+                {
+                    SheriffPlugin.ReadSettings(reader);
+                    SheriffMenuInjector.UpdateMenuValues();
+                }
+                catch (Exception e) { SheriffPlugin.Log.LogError("Lettura settings Sheriff: " + e); }
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
+    internal static class AmongUsClient_OnPlayerJoined_Patch
+    {
+        private static void Postfix(AmongUsClient __instance)
+        {
+            if (__instance == null || !__instance.AmHost) return;
+
+            SheriffPlugin.HostBroadcastSettings();
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))]
+    internal static class PlayerControl_CheckMurder_Patch
+    {
+        private static bool Prefix(PlayerControl __instance, PlayerControl t)
+        {
+            if (!SheriffPlugin.IsSheriff(__instance)) return true;
+
+            var client = AmongUsClient.Instance;
+            if (client == null || !client.AmHost) return true;
+
+            try
+            {
+                if (t == null || t.Data == null || t.Data.IsDead) return false;
+
+                if (SheriffPlugin.IsImpostor(t))
+                    __instance.RpcMurderPlayer(t, MurderResultFlags.Succeeded);
+                else
+                    __instance.RpcMurderPlayer(__instance, MurderResultFlags.Succeeded);
+
+                var role = __instance.Data.myRole;
+                if (role != null) role.SetKillTimer(SheriffPlugin.ActiveCooldown);
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("Sheriff CheckMurder: " + e);
+            }
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(SettingMenu), nameof(SettingMenu.OnEnable))]
+    internal static class SettingMenu_OnEnable_Patch
+    {
+        private static void Postfix(SettingMenu __instance)
+        {
+            var gameMenu = __instance.TryCast<GameSettingMenu>();
+            if (gameMenu != null)
+            {
+                SheriffMenuInjector.ActiveMenu = gameMenu;
+                try { SheriffMenuInjector.Inject(gameMenu); }
+                catch (Exception e) { SheriffPlugin.Log.LogError("Inject toggle Sheriff: " + e); }
+            }
+        }
+    }
+
+    internal static class SheriffMenuInjector
+    {
+        public static GameSettingMenu ActiveMenu;
+
+        public static void Inject(GameSettingMenu menu)
+        {
+            if (menu == null || menu.AllItems == null || menu.AllItems.Count == 0) return;
+            var parent = menu.AllItems[0].parent;
+            if (parent == null) return;
+            var template = menu.keyvaluePrefab;
+            if (template == null) return;
+
+            InjectToggle(menu, parent, template, "SheriffToggle", "Enable Sheriff",
+                () => {
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                        return SheriffPlugin.CfgEnabled.Value;
+                    else
+                        return SheriffPlugin.ActiveEnabled;
+                },
+                (val) => {
+                    SheriffPlugin.CfgEnabled.Value = val;
+                    SheriffPlugin.CfgEnabled.ConfigFile.Save();
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                    {
+                        SheriffPlugin.HostBroadcastSettings();
+                    }
+                });
+
+            InjectNumeric(menu, parent, template, "SheriffCount", "Sheriff Count", 1f, 1f, 3f, "0",
+                () => {
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                        return SheriffPlugin.CfgCount.Value;
+                    else
+                        return SheriffPlugin.ActiveCount;
+                },
+                (val) => {
+                    SheriffPlugin.CfgCount.Value = (int)val;
+                    SheriffPlugin.CfgEnabled.ConfigFile.Save();
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                    {
+                        SheriffPlugin.HostBroadcastSettings();
+                    }
+                });
+
+            InjectNumeric(menu, parent, template, "SheriffCooldown", "Sheriff Kill Cooldown", 5f, 5f, 60f, "0s",
+                () => {
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                        return SheriffPlugin.CfgCooldown.Value;
+                    else
+                        return SheriffPlugin.ActiveCooldown;
+                },
+                (val) => {
+                    SheriffPlugin.CfgCooldown.Value = val;
+                    SheriffPlugin.CfgEnabled.ConfigFile.Save();
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                    {
+                        SheriffPlugin.HostBroadcastSettings();
+                    }
+                });
+
+            var scroller = parent.GetComponentInParent<Scroller>();
+            if (scroller != null && scroller.YBounds != null)
+            {
+                var yb = scroller.YBounds;
+                scroller.YBounds = new FloatRange(yb.min, yb.max + 1.5f);
+            }
+        }
+
+        public static void UpdateMenuValues()
+        {
+            if (ActiveMenu == null || !ActiveMenu.gameObject.activeInHierarchy) return;
+
+            try
+            {
+                var parent = ActiveMenu.AllItems != null && ActiveMenu.AllItems.Count > 0 ? ActiveMenu.AllItems[0].parent : null;
+                if (parent == null) return;
+
+                var toggle = parent.Find("SheriffToggle");
+                if (toggle != null)
+                {
+                    var no = toggle.GetComponent<NumberOption>();
+                    if (no != null && no.ValueText != null)
+                    {
+                        no.ValueText.text = SheriffPlugin.ActiveEnabled ? "On" : "Off";
+                    }
+                }
+
+                var count = parent.Find("SheriffCount");
+                if (count != null)
+                {
+                    var no = count.GetComponent<NumberOption>();
+                    if (no != null && no.ValueText != null)
+                    {
+                        no.ValueText.text = SheriffPlugin.ActiveCount.ToString("0");
+                    }
+                }
+
+                var cooldown = parent.Find("SheriffCooldown");
+                if (cooldown != null)
+                {
+                    var no = cooldown.GetComponent<NumberOption>();
+                    if (no != null && no.ValueText != null)
+                    {
+                        no.ValueText.text = SheriffPlugin.ActiveCooldown.ToString("0s");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SheriffPlugin.Log.LogError("Errore aggiornamento menu client: " + e);
+            }
+        }
+
+        private static void InjectToggle(GameSettingMenu menu, Transform parent, NumberOption template, string name, string label, Func<bool> getter, Action<bool> setter)
+        {
+            var existing = parent.Find(name);
+            var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+
+            if (existing != null)
+            {
+                float yPos = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                existing.localPosition = new Vector3(existing.localPosition.x, yPos, existing.localPosition.z);
+                if (!menu.AllItems.Contains(existing))
+                {
+                    menu.AllItems.Add(existing);
+                }
+
+                var no = existing.GetComponent<NumberOption>();
+                if (no != null && no.ValueText != null)
+                {
+                    no.ValueText.text = getter() ? "On" : "Off";
+                }
+
+                foreach (var pb in existing.GetComponentsInChildren<PassiveButton>())
+                {
+                    if (pb != null) pb.gameObject.SetActive(isHost);
+                }
+                return;
+            }
+
+            var cloneGo = UnityEngine.Object.Instantiate(template.gameObject, parent);
+            cloneGo.name = name;
+            float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
+            cloneGo.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
+            cloneGo.transform.localScale = Vector3.one;
+            cloneGo.transform.localRotation = Quaternion.identity;
+            cloneGo.SetActive(true);
+
+            var noComp = cloneGo.GetComponent<NumberOption>();
+            if (noComp != null)
+            {
+                noComp.enabled = false;
+                if (noComp.TitleText != null) noComp.TitleText.text = label;
+                if (noComp.ValueText != null) noComp.ValueText.text = getter() ? "On" : "Off";
+            }
+
+            foreach (var pb in cloneGo.GetComponentsInChildren<PassiveButton>())
+            {
+                if (pb == null) continue;
+                if (!isHost)
+                {
+                    pb.gameObject.SetActive(false);
+                    continue;
+                }
+                if (pb.OnClick == null) continue;
+                pb.OnClick.RemoveAllListeners();
+                pb.OnClick.AddListener((UnityAction)(() =>
+                {
+                    setter(!getter());
+                    if (noComp != null && noComp.ValueText != null) noComp.ValueText.text = getter() ? "On" : "Off";
+                }));
+            }
+
+            menu.AllItems.Add(cloneGo.transform);
+        }
+
+        private static void InjectNumeric(GameSettingMenu menu, Transform parent, NumberOption template, string name, string label, float step, float min, float max, string format, Func<float> getter, Action<float> setter)
+        {
+            var existing = parent.Find(name);
+            var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+
+            if (existing != null)
+            {
+                float yPos = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                existing.localPosition = new Vector3(existing.localPosition.x, yPos, existing.localPosition.z);
+                if (!menu.AllItems.Contains(existing))
+                {
+                    menu.AllItems.Add(existing);
+                }
+
+                var no = existing.GetComponent<NumberOption>();
+                if (no != null && no.ValueText != null)
+                {
+                    no.ValueText.text = getter().ToString(format);
+                }
+
+                foreach (var pb in existing.GetComponentsInChildren<PassiveButton>())
+                {
+                    if (pb != null) pb.gameObject.SetActive(isHost);
+                }
+                return;
+            }
+
+            var cloneGo = UnityEngine.Object.Instantiate(template.gameObject, parent);
+            cloneGo.name = name;
+            float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
+            cloneGo.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
+            cloneGo.transform.localScale = Vector3.one;
+            cloneGo.transform.localRotation = Quaternion.identity;
+            cloneGo.SetActive(true);
+
+            var noComp = cloneGo.GetComponent<NumberOption>();
+            if (noComp != null)
+            {
+                noComp.enabled = false;
+                if (noComp.TitleText != null) noComp.TitleText.text = label;
+                if (noComp.ValueText != null) noComp.ValueText.text = getter().ToString(format);
+            }
+
+            var buttons = cloneGo.GetComponentsInChildren<PassiveButton>();
+            if (!isHost)
+            {
+                foreach (var pb in buttons)
+                {
+                    if (pb != null) pb.gameObject.SetActive(false);
+                }
+            }
+            else if (buttons.Length >= 2)
+            {
+                var sorted = new List<PassiveButton>();
+                foreach (var b in buttons) sorted.Add(b);
+                sorted.Sort((a, b) => a.transform.localPosition.x.CompareTo(b.transform.localPosition.x));
+
+                var dec = sorted[0];
+                var inc = sorted[sorted.Count - 1];
+
+                dec.OnClick.RemoveAllListeners();
+                dec.OnClick.AddListener((UnityAction)(() =>
+                {
+                    float val = Math.Max(min, getter() - step);
+                    setter(val);
+                    if (noComp != null && noComp.ValueText != null) noComp.ValueText.text = getter().ToString(format);
+                }));
+
+                inc.OnClick.RemoveAllListeners();
+                inc.OnClick.AddListener((UnityAction)(() =>
+                {
+                    float val = Math.Min(max, getter() + step);
+                    setter(val);
+                    if (noComp != null && noComp.ValueText != null) noComp.ValueText.text = getter().ToString(format);
+                }));
+            }
+
+            menu.AllItems.Add(cloneGo.transform);
+        }
+    }
+}
