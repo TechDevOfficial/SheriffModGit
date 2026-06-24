@@ -19,7 +19,7 @@
     <PackageReference Include="ClassicUs.GameLibs" Version="2026.5.27.0" PrivateAssets="all" />
 
     <!-- Manactor networking framework: solo riferimento di compilazione, viene caricato come plugin BepInEx separato -->
-    <PackageReference Include="ClassicUs.Manactor" Version="1.0.0" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="ClassicUs.Manactor" Version="1.0.1" PrivateAssets="all" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <!-- Copia automatica del DLL nella cartella plugins dopo la build -->
