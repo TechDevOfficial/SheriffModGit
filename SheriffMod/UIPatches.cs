@@ -21,12 +21,14 @@ namespace ClassicUs.SheriffMod
                 versionText.ForceMeshUpdate(false, false);
                 var rend = versionText.GetComponent<MeshRenderer>();
                 Bounds worldBounds = rend != null ? rend.bounds : new Bounds(versionText.transform.position, Vector3.zero);
-                float gap = worldBounds.size.y > 0f ? worldBounds.size.y * 0.25f : 0.05f;
+                float lineHeight = worldBounds.size.y > 0f ? worldBounds.size.y : 0.2f;
+                float gap = lineHeight * 0.25f;
+                float rightShift = lineHeight * 0.6f;
 
                 var go = new GameObject("SheriffModVersion");
                 go.transform.SetParent(parent, true);
                 go.transform.localScale = versionText.transform.localScale;
-                go.transform.position = new Vector3(versionText.transform.position.x, worldBounds.min.y - gap, versionText.transform.position.z);
+                go.transform.position = new Vector3(versionText.transform.position.x + rightShift, worldBounds.min.y - gap, versionText.transform.position.z);
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
