@@ -367,6 +367,7 @@ namespace ClassicUs.SheriffMod
     internal static class SheriffMenuInjector
     {
         public static GameSettingMenu ActiveMenu;
+        private static int _injectedCount;
 
         public static void Inject(GameSettingMenu menu)
         {
@@ -375,6 +376,8 @@ namespace ClassicUs.SheriffMod
             if (parent == null) return;
             var template = menu.keyvaluePrefab;
             if (template == null) return;
+
+            _injectedCount = 0;
 
             InjectToggle(menu, parent, template, "SheriffToggle", "Enable Sheriff",
                 () => {
@@ -487,16 +490,15 @@ namespace ClassicUs.SheriffMod
             if (existing != null)
             {
                 target = existing;
-                float yPos = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                float yPos = menu.YStart - (menu.AllItems.Count + _injectedCount) * menu.YOffset;
                 target.localPosition = new Vector3(target.localPosition.x, yPos, target.localPosition.z);
-                if (!menu.AllItems.Contains(target)) menu.AllItems.Add(target);
                 no = target.GetComponent<NumberOption>();
             }
             else
             {
                 var go = UnityEngine.Object.Instantiate(template.gameObject, parent);
                 go.name = name;
-                float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                float y = menu.YStart - (menu.AllItems.Count + _injectedCount) * menu.YOffset;
                 go.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
                 go.transform.localScale = Vector3.one;
                 go.transform.localRotation = Quaternion.identity;
@@ -504,8 +506,9 @@ namespace ClassicUs.SheriffMod
                 target = go.transform;
                 no = go.GetComponent<NumberOption>();
                 if (no != null) no.enabled = false;
-                menu.AllItems.Add(target);
             }
+
+            _injectedCount++;
 
             if (no != null)
             {
@@ -539,16 +542,15 @@ namespace ClassicUs.SheriffMod
             if (existing != null)
             {
                 target = existing;
-                float yPos = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                float yPos = menu.YStart - (menu.AllItems.Count + _injectedCount) * menu.YOffset;
                 target.localPosition = new Vector3(target.localPosition.x, yPos, target.localPosition.z);
-                if (!menu.AllItems.Contains(target)) menu.AllItems.Add(target);
                 no = target.GetComponent<NumberOption>();
             }
             else
             {
                 var go = UnityEngine.Object.Instantiate(template.gameObject, parent);
                 go.name = name;
-                float y = menu.YStart - menu.AllItems.Count * menu.YOffset;
+                float y = menu.YStart - (menu.AllItems.Count + _injectedCount) * menu.YOffset;
                 go.transform.localPosition = new Vector3(template.transform.localPosition.x, y, template.transform.localPosition.z);
                 go.transform.localScale = Vector3.one;
                 go.transform.localRotation = Quaternion.identity;
@@ -556,8 +558,9 @@ namespace ClassicUs.SheriffMod
                 target = go.transform;
                 no = go.GetComponent<NumberOption>();
                 if (no != null) no.enabled = false;
-                menu.AllItems.Add(target);
             }
+
+            _injectedCount++;
 
             if (no != null)
             {

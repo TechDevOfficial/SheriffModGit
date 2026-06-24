@@ -15,16 +15,18 @@ namespace ClassicUs.SheriffMod
                 var versionText = __instance.text;
                 if (__instance == null || versionText == null) return;
 
-                if (versionText.transform.Find("SheriffModVersion") != null) return;
+                var parent = versionText.transform.parent != null ? versionText.transform.parent : versionText.transform;
+                if (parent.Find("SheriffModVersion") != null) return;
 
                 versionText.ForceMeshUpdate(false, false);
-                float lineHeight = versionText.textBounds.size.y;
-                if (lineHeight <= 0f) lineHeight = versionText.fontSize * 0.01f;
+                var rend = versionText.GetComponent<MeshRenderer>();
+                Bounds worldBounds = rend != null ? rend.bounds : new Bounds(versionText.transform.position, Vector3.zero);
+                float gap = worldBounds.size.y > 0f ? worldBounds.size.y * 0.25f : 0.05f;
 
                 var go = new GameObject("SheriffModVersion");
-                go.transform.SetParent(versionText.transform, false);
-                go.transform.localPosition = new Vector3(0f, -lineHeight * 1.1f, 0f);
-                go.transform.localScale = Vector3.one;
+                go.transform.SetParent(parent, true);
+                go.transform.localScale = versionText.transform.localScale;
+                go.transform.position = new Vector3(versionText.transform.position.x, worldBounds.min.y - gap, versionText.transform.position.z);
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.text = $"Loaded SheriffMod v{SheriffPlugin.Version}";
