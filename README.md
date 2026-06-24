@@ -33,9 +33,5 @@ You must manually copy this DLL to your game's BepInEx plugins directory:
 
 ## Configuration
 
-Settings can be changed:
-1. **In-game**: In the laptop customization menu under the **Game** tab.
-2. **Configuration file**: Editing `BepInEx/config/classicus.sheriff.cfg` on disk:
-   - `EnableSheriff` (bool) – Toggles the Sheriff role.
-   - `SheriffCount` (int, 0–3) – Number of Sheriffs to assign.
-   - `SheriffKillCooldown` (float, 5–60s) – Cooldown of the Sheriff's kill button.
+Settings can be changed in-game: in the laptop customization menu under the **Game** tab (only by the host).
+
