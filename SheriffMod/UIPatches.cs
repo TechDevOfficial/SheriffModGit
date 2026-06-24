@@ -19,7 +19,7 @@ namespace ClassicUs.SheriffMod
 
                 var go = new GameObject("SheriffModVersion");
                 go.transform.SetParent(versionText.transform, false);
-                go.transform.localPosition = new Vector3(0f, -versionText.fontSize * 1.5f, 0f);
+                go.transform.localPosition = new Vector3(0f, -versionText.fontSize * 0.1f, 0f);
                 go.transform.localRotation = Quaternion.identity;
                 go.transform.localScale = Vector3.one;
 
