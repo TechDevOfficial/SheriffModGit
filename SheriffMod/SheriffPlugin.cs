@@ -6,8 +6,8 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using ClassicUs.Manactor;
 using HarmonyLib;
-using Hazel;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using UnityEngine;
@@ -15,7 +15,7 @@ using UnityEngine;
 namespace ClassicUs.SheriffMod
 {
     [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.2")]
-    [BepInDependency(ClassicUs.Manactor.ManactorPlugin.Guid)]
+    [BepInDependency(ManactorPlugin.Guid)]
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
@@ -48,8 +48,8 @@ namespace ClassicUs.SheriffMod
                 new ConfigDescription("Cooldown del killbutton dello Sheriff (secondi).",
                     new AcceptableValueRange<float>(5f, 60f)));
 
-            ClassicUs.Manactor.ManactorAPI.Register(RoleModName, Version);
-            ClassicUs.Manactor.ManactorAPI.RegisterRpcHandler(RpcSyncSettings, OnSyncSettingsRpc);
+            ManactorAPI.Register(RoleModName, Version);
+            ManactorAPI.RegisterRpcMethods(this);
 
             new Harmony(Guid).PatchAll();
 
@@ -72,30 +72,19 @@ namespace ClassicUs.SheriffMod
             ActiveCount = CfgCount.Value;
             ActiveCooldown = CfgCooldown.Value;
 
-            ClassicUs.Manactor.ManactorAPI.SendRpc(RpcSyncSettings, w =>
-            {
-                w.Write(ActiveEnabled);
-                w.Write((byte)ActiveCount);
-                w.Write(ActiveCooldown);
-            });
+            ManactorAPI.SendRpcMethod(RpcSyncSettings, ActiveEnabled, (byte)ActiveCount, ActiveCooldown);
 
             Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
         }
 
-        private static void OnSyncSettingsRpc(byte senderId, MessageReader reader)
+        [ManactorRpc(RpcSyncSettings)]
+        private static void OnSyncSettingsRpc(byte senderId, bool enabled, byte count, float cooldown)
         {
-            try
-            {
-                ActiveEnabled = reader.ReadBoolean();
-                ActiveCount = reader.ReadByte();
-                ActiveCooldown = reader.ReadSingle();
-                Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
-                SheriffMenuInjector.UpdateMenuValues();
-            }
-            catch (Exception e)
-            {
-                Log.LogError("Reading Sheriff settings failed: " + e);
-            }
+            ActiveEnabled = enabled;
+            ActiveCount = count;
+            ActiveCooldown = cooldown;
+            Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+            SheriffMenuInjector.UpdateMenuValues();
         }
 
         public static bool IsImpostor(PlayerControl p)
