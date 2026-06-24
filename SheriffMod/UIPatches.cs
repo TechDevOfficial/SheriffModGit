@@ -50,7 +50,14 @@ namespace ClassicUs.SheriffMod
                 tmp.enableWordWrapping = false;
                 tmp.ForceMeshUpdate(true, true);
 
-                SheriffPlugin.Log.LogInfo($"[VersionShower] label created at {go.transform.position}, active={go.activeInHierarchy}, rendererEnabled={(tmp.renderer != null ? tmp.renderer.enabled.ToString() : "no renderer")}");
+                var tmpRenderer = tmp.renderer;
+                if (rend != null && tmpRenderer != null)
+                {
+                    tmpRenderer.sortingLayerID = rend.sortingLayerID;
+                    tmpRenderer.sortingOrder = rend.sortingOrder + 10;
+                }
+
+                SheriffPlugin.Log.LogInfo($"[VersionShower] label created at {go.transform.position}, active={go.activeInHierarchy}, rendererEnabled={(tmpRenderer != null ? tmpRenderer.enabled.ToString() : "no renderer")}, sortingLayer={(tmpRenderer != null ? tmpRenderer.sortingLayerID.ToString() : "n/a")}, sortingOrder={(tmpRenderer != null ? tmpRenderer.sortingOrder.ToString() : "n/a")}, origSortingOrder={(rend != null ? rend.sortingOrder.ToString() : "n/a")}");
             }
             catch (Exception e)
             {
