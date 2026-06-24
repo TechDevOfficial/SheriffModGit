@@ -14,12 +14,12 @@ using UnityEngine;
 
 namespace ClassicUs.SheriffMod
 {
-    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.4")]
+    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.5")]
     [BepInDependency(ManactorPlugin.Guid)]
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
-        public const string Version = "1.0.4";
+        public const string Version = "1.0.5";
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";

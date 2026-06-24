@@ -165,6 +165,8 @@ namespace ClassicUs.SheriffMod
     {
         private static void Prefix(RoleManager __instance, RoleTeamTypes type, int max)
         {
+            RoleRegistration.EnsureSheriffRegistered(__instance);
+
             var client = AmongUsClient.Instance;
             if (client == null || !client.AmHost) return;
 
