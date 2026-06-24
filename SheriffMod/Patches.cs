@@ -32,9 +32,6 @@ namespace ClassicUs.SheriffMod
 
     internal static class RoleRegistration
     {
-        // Registra Sheriff in allRoles senza richiamare RoleManager.Start() per intero:
-        // farlo in Freeplay (dove Start() gira in un contesto diverso da una partita online)
-        // mandava in crash il gioco perché ri-eseguiva tutta l'inizializzazione vanilla a metà.
         public static void EnsureSheriffRegistered(RoleManager rm)
         {
             if (rm == null) return;
