@@ -23,7 +23,7 @@ namespace ClassicUs.SheriffMod
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";
-        public const byte RpcSyncSettings = 210;
+        public const string RpcSyncSettingsKey = "classicus.sheriff.SyncSettings";
 
         public static ManualLogSource Log;
 
@@ -72,12 +72,12 @@ namespace ClassicUs.SheriffMod
             ActiveCount = CfgCount.Value;
             ActiveCooldown = CfgCooldown.Value;
 
-            ManactorAPI.SendRpcMethod(RpcSyncSettings, ActiveEnabled, (byte)ActiveCount, ActiveCooldown);
+            ManactorAPI.SendRpcMethod(RpcSyncSettingsKey, ActiveEnabled, (byte)ActiveCount, ActiveCooldown);
 
             Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
         }
 
-        [ManactorRpc(RpcSyncSettings)]
+        [ManactorRpc(RpcSyncSettingsKey)]
         private static void OnSyncSettingsRpc(byte senderId, bool enabled, byte count, float cooldown)
         {
             ActiveEnabled = enabled;
