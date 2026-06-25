@@ -62,15 +62,18 @@ namespace ClassicUs.SheriffMod
             if (_il2CppTypeRegistered) return;
             _il2CppTypeRegistered = true;
 
-            try
+            ManactorAPI.RegisterIl2CppType(() =>
             {
-                ClassInjector.RegisterTypeInIl2Cpp<SheriffRole>();
-                Log.LogInfo("SheriffRole type registered in IL2CPP.");
-            }
-            catch (Exception e)
-            {
-                Log.LogError("SheriffRole registration failed: " + e);
-            }
+                try
+                {
+                    ClassInjector.RegisterTypeInIl2Cpp<SheriffRole>();
+                    Log.LogInfo("SheriffRole type registered in IL2CPP.");
+                }
+                catch (Exception e)
+                {
+                    Log.LogError("SheriffRole registration failed: " + e);
+                }
+            });
         }
 
         private static bool _il2CppTypeRegistered;
