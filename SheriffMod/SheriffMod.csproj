@@ -20,6 +20,7 @@
 
     <!-- Manactor networking framework: solo riferimento di compilazione, viene caricato come plugin BepInEx separato -->
     <PackageReference Include="ClassicUs.Manactor" Version="1.0.10" PrivateAssets="all" ExcludeAssets="runtime" />
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(GameDir)\BepInEx\interop\UnityEngine.AudioModule.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 
   <!-- Copia automatica del DLL nella cartella plugins dopo la build -->

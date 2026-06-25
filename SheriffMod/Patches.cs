@@ -160,6 +160,39 @@ namespace ClassicUs.SheriffMod
         }
     }
 
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.IntroSound), MethodType.Getter)]
+    internal static class RoleBehaviour_IntroSound_Patch
+    {
+        private static bool Prefix(RoleBehaviour __instance, ref AudioClip __result)
+        {
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = null;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.KillAbilityImageName), MethodType.Getter)]
+    internal static class RoleBehaviour_KillAbilityImageName_Patch
+    {
+        private static bool Prefix(RoleBehaviour __instance, ref string __result)
+        {
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = string.Empty;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(RoleBehaviour), nameof(RoleBehaviour.KillAbilityName), MethodType.Getter)]
+    internal static class RoleBehaviour_KillAbilityName_Patch
+    {
+        private static bool Prefix(RoleBehaviour __instance, ref string __result)
+        {
+            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            __result = "Kill";
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.GetTeamColor))]
     internal static class IntroCutscene_GetTeamColor_Patch
     {
