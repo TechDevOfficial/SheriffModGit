@@ -24,10 +24,18 @@ namespace ClassicUs.SheriffMod
     [HarmonyPatch(typeof(HudManager), nameof(HudManager.FixedUpdate))]
     internal static class HudManager_FixedUpdate_RoleRegistration_Patch
     {
-        private static void Prefix()
+        private static void Prefix(HudManager __instance)
         {
             if (RoleManager.InstanceExists)
                 RoleRegistration.EnsureSheriffRegistered(RoleManager.Instance);
+
+            var local = PlayerControl.LocalPlayer;
+            if (local != null && local.Data != null && SheriffPlugin.IsSheriff(local) && __instance.KillButton != null)
+            {
+                bool shouldShow = !local.Data.IsDead;
+                if (__instance.KillButton.gameObject.activeSelf != shouldShow)
+                    __instance.KillButton.gameObject.SetActive(shouldShow);
+            }
         }
     }
 
@@ -52,7 +60,7 @@ namespace ClassicUs.SheriffMod
                 if (rm.allRoles != null)
                 {
                     foreach (var r in rm.allRoles)
-                        if (r != null && r.SafeTryCast<SheriffRole>() != null) return;
+                        if (r != null && r.GetIl2CppType().Name == "SheriffRole") return;
                 }
 
                 rm.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
@@ -61,7 +69,7 @@ namespace ClassicUs.SheriffMod
 
                 foreach (var role in rm.allRoles)
                 {
-                    if (role != null && role.SafeTryCast<SheriffRole>() != null)
+                    if (role != null && role.GetIl2CppType().Name == "SheriffRole")
                     {
                         SheriffPlugin.SheriffRoleName = role.roleCodeName;
                         break;
@@ -80,7 +88,7 @@ namespace ClassicUs.SheriffMod
     {
         private static void Postfix(RoleBehaviour __instance, PlayerControl player)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return;
+            if (__instance == null || __instance.GetIl2CppType().Name != "SheriffRole") return;
             try
             {
                 __instance.RoleTeamType = RoleTeamTypes.Crewmate;
@@ -106,9 +114,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = "Sheriff";
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = "Sheriff";
+                return false;
+            }
+            return true;
         }
     }
 
@@ -117,9 +129,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
+                return false;
+            }
+            return true;
         }
     }
 
@@ -128,9 +144,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = "Find and kill the Impostor";
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = "Find and kill the Impostor";
+                return false;
+            }
+            return true;
         }
     }
 
@@ -139,9 +159,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref float __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = SheriffPlugin.ActiveCooldown;
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = SheriffPlugin.ActiveCooldown;
+                return false;
+            }
+            return true;
         }
     }
 
@@ -150,9 +174,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref Color __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = new Color(1f, 0.65f, 0f, 1f);
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = new Color(1f, 0.65f, 0f, 1f);
+                return false;
+            }
+            return true;
         }
     }
 
@@ -161,9 +189,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref AudioClip __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = null;
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = null;
+                return false;
+            }
+            return true;
         }
     }
 
@@ -172,9 +204,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = string.Empty;
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = string.Empty;
+                return false;
+            }
+            return true;
         }
     }
 
@@ -183,9 +219,13 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
-            __result = "Kill";
-            return false;
+            if (__instance == null) return true;
+            if (__instance.GetIl2CppType().Name == "SheriffRole")
+            {
+                __result = "Kill";
+                return false;
+            }
+            return true;
         }
     }
 
@@ -194,7 +234,7 @@ namespace ClassicUs.SheriffMod
     {
         private static void Postfix(RoleBehaviour role, ref Color __result)
         {
-            if (role != null && role.SafeTryCast<SheriffRole>() != null)
+            if (role != null && role.GetIl2CppType().Name == "SheriffRole")
                 __result = new Color(1f, 0.65f, 0f, 1f);
         }
     }
@@ -301,7 +341,7 @@ namespace ClassicUs.SheriffMod
             try
             {
                 var role = exiled.myRole;
-                if (role == null || role.SafeTryCast<SheriffRole>() == null) return;
+                if (role == null || role.GetIl2CppType().Name != "SheriffRole") return;
 
                 string text = $"{exiled.PlayerName} was the Sheriff.";
                 if (__instance.Text != null) __instance.Text.Text = text;
@@ -324,7 +364,7 @@ namespace ClassicUs.SheriffMod
             try
             {
                 var role = ctrl.exiled.myRole;
-                if (role == null || role.SafeTryCast<SheriffRole>() == null) return;
+                if (role == null || role.GetIl2CppType().Name != "SheriffRole") return;
 
                 ctrl.completeString = $"{ctrl.exiled.PlayerName} was the Sheriff.";
             }

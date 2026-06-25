@@ -14,12 +14,12 @@ using UnityEngine;
 
 namespace ClassicUs.SheriffMod
 {
-    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.11")]
+    [BepInPlugin(Guid, "Classic Us Sheriff", "1.0.12")]
     [BepInDependency(ManactorPlugin.Guid)]
     public class SheriffPlugin : BasePlugin
     {
         public const string Guid = "classicus.sheriff";
-        public const string Version = "1.0.11";
+        public const string Version = "1.0.12";
         public const string RoleModName = "ClassicUsSheriff";
 
         public static string SheriffRoleName = "Sheriff";
@@ -159,7 +159,7 @@ namespace ClassicUs.SheriffMod
         {
             if (p == null || p.Data == null) return false;
             var role = p.Data.myRole;
-            return role != null && role.SafeTryCast<SheriffRole>() != null;
+            return role != null && role.GetIl2CppType().Name == "SheriffRole";
         }
     }
 }
