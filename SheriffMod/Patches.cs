@@ -34,11 +34,6 @@ namespace ClassicUs.SheriffMod
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.Start))]
     internal static class RoleManager_Start_Patch
     {
-        private static void Prefix(RoleManager __instance)
-        {
-            RoleRegistration.EnsureSheriffRegistered(__instance);
-        }
-
         private static void Postfix(RoleManager __instance)
         {
             RoleRegistration.EnsureSheriffRegistered(__instance);
