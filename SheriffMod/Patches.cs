@@ -281,6 +281,11 @@ namespace ClassicUs.SheriffMod
             for (int i = 0; i < toAssign; i++)
             {
                 var p = candidates[i];
+                if (rng.NextDouble() * 100.0 >= SheriffPlugin.ActiveRoleChance)
+                {
+                    SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Role chance roll failed for playerId={p.Data.PlayerId}");
+                    continue;
+                }
                 rm.AssignRole(p, SheriffPlugin.SheriffRoleName);
                 SheriffPlugin.Log.LogInfo($"[AssignSheriffs] Sheriff assigned to playerId={p.Data.PlayerId}");
             }
@@ -451,6 +456,22 @@ namespace ClassicUs.SheriffMod
                     }
                 });
 
+            InjectNumeric(menu, parent, template, "SheriffRoleChance", "Sheriff Role Chance", 10f, 0f, 100f, "0%",
+                () => {
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                        return SheriffPlugin.CfgRoleChance.Value;
+                    else
+                        return SheriffPlugin.ActiveRoleChance;
+                },
+                (val) => {
+                    SheriffPlugin.CfgRoleChance.Value = val;
+                    SheriffPlugin.CfgEnabled.ConfigFile.Save();
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                    {
+                        SheriffPlugin.HostBroadcastSettings();
+                    }
+                });
+
             var scroller = parent.GetComponentInParent<Scroller>();
             if (scroller != null && scroller.YBounds != null)
             {
@@ -462,7 +483,7 @@ namespace ClassicUs.SheriffMod
                 }
 
                 var yb = scroller.YBounds;
-                scroller.YBounds = new FloatRange(yb.min, baseMax + 1.5f);
+                scroller.YBounds = new FloatRange(yb.min, baseMax + 2f);
             }
         }
 
@@ -480,6 +501,9 @@ namespace ClassicUs.SheriffMod
 
                 if (_valueTexts.TryGetValue("SheriffCooldown", out var cooldownText) && cooldownText != null)
                     cooldownText.text = SheriffPlugin.ActiveCooldown.ToString("0s");
+
+                if (_valueTexts.TryGetValue("SheriffRoleChance", out var chanceText) && chanceText != null)
+                    chanceText.text = SheriffPlugin.ActiveRoleChance.ToString("0%");
             }
             catch (Exception e)
             {

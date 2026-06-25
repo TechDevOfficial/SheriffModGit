@@ -31,10 +31,12 @@ namespace ClassicUs.SheriffMod
         public static ConfigEntry<bool> CfgEnabled;
         public static ConfigEntry<int> CfgCount;
         public static ConfigEntry<float> CfgCooldown;
+        public static ConfigEntry<float> CfgRoleChance;
 
         public static bool ActiveEnabled;
         public static int ActiveCount = 1;
         public static float ActiveCooldown = 25f;
+        public static float ActiveRoleChance = 100f;
 
         public override void Load()
         {
@@ -48,6 +50,9 @@ namespace ClassicUs.SheriffMod
             CfgCooldown = Config.Bind("Game", "SheriffKillCooldown", 25f,
                 new ConfigDescription("Cooldown del killbutton dello Sheriff (secondi).",
                     new AcceptableValueRange<float>(5f, 60f)));
+            CfgRoleChance = Config.Bind("Game", "SheriffRoleChance", 100f,
+                new ConfigDescription("Probabilita' che un candidato selezionato diventi Sheriff.",
+                    new AcceptableValueRange<float>(0f, 100f)));
 
             ManactorAPI.Register(RoleModName, Version);
             ManactorAPI.RegisterRpcMethods(this);
@@ -86,19 +91,21 @@ namespace ClassicUs.SheriffMod
             ActiveEnabled = CfgEnabled.Value;
             ActiveCount = CfgCount.Value;
             ActiveCooldown = CfgCooldown.Value;
+            ActiveRoleChance = CfgRoleChance.Value;
 
-            ManactorAPI.SendRpcMethod(RpcSyncSettingsKey, ActiveEnabled, (byte)ActiveCount, ActiveCooldown);
+            ManactorAPI.SendRpcMethod(RpcSyncSettingsKey, ActiveEnabled, (byte)ActiveCount, ActiveCooldown, ActiveRoleChance);
 
-            Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+            Log.LogInfo($"Sheriff settings sent: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown} chance={ActiveRoleChance}");
         }
 
         [ManactorRpc(RpcSyncSettingsKey)]
-        private static void OnSyncSettingsRpc(byte senderId, bool enabled, byte count, float cooldown)
+        private static void OnSyncSettingsRpc(byte senderId, bool enabled, byte count, float cooldown, float roleChance)
         {
             ActiveEnabled = enabled;
             ActiveCount = count;
             ActiveCooldown = cooldown;
-            Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown}");
+            ActiveRoleChance = roleChance;
+            Log.LogInfo($"Sheriff settings received: enabled={ActiveEnabled} count={ActiveCount} cd={ActiveCooldown} chance={ActiveRoleChance}");
             SheriffMenuInjector.UpdateMenuValues();
         }
 
