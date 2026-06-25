@@ -43,15 +43,15 @@ namespace ClassicUs.SheriffMod
             Log = base.Log;
 
             CfgEnabled = Config.Bind("Game", "EnableSheriff", true,
-                "Abilita il ruolo Sheriff: un crewmate con killbutton che deve uccidere l'impostore.");
+                "Enables the Sheriff role: a crewmate with a kill button who must kill the impostor.");
             CfgCount = Config.Bind("Game", "SheriffCount", 1,
-                new ConfigDescription("Quanti Sheriff assegnare per partita.",
+                new ConfigDescription("How many Sheriffs to assign per match.",
                     new AcceptableValueRange<int>(0, 3)));
             CfgCooldown = Config.Bind("Game", "SheriffKillCooldown", 25f,
-                new ConfigDescription("Cooldown del killbutton dello Sheriff (secondi).",
+                new ConfigDescription("Cooldown of the Sheriff's kill button (seconds).",
                     new AcceptableValueRange<float>(5f, 60f)));
             CfgRoleChance = Config.Bind("Game", "SheriffRoleChance", 100f,
-                new ConfigDescription("Probabilita' che un candidato selezionato diventi Sheriff.",
+                new ConfigDescription("Chance that a selected candidate becomes Sheriff.",
                     new AcceptableValueRange<float>(0f, 100f)));
 
             ManactorAPI.Register(RoleModName, Version);

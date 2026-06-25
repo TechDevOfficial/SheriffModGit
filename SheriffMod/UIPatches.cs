@@ -23,11 +23,19 @@ namespace ClassicUs.SheriffMod
                 float gap = (worldBounds.size.y > 0f ? worldBounds.size.y : 0.3f) * 0.25f;
                 float rightShift = (worldBounds.size.y > 0f ? worldBounds.size.y : 0.3f) * 0.23f;
 
+                float baseY = worldBounds.min.y;
+                foreach (Transform child in versionText.transform)
+                {
+                    if (!child.name.EndsWith("ModVersion")) continue;
+                    var childRend = child.GetComponent<MeshRenderer>();
+                    if (childRend != null) baseY = Mathf.Min(baseY, childRend.bounds.min.y);
+                }
+
                 var go = new GameObject("SheriffModVersion");
                 go.transform.SetParent(versionText.transform, true);
                 go.transform.localScale = Vector3.one;
                 go.transform.localRotation = Quaternion.identity;
-                go.transform.position = new Vector3(versionText.transform.position.x + rightShift, worldBounds.min.y - gap, versionText.transform.position.z);
+                go.transform.position = new Vector3(versionText.transform.position.x + rightShift, baseY - gap, versionText.transform.position.z);
 
                 var tmp = go.AddComponent<TextMeshPro>();
                 tmp.font = versionText.font;
