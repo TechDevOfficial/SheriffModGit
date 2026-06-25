@@ -46,6 +46,7 @@ namespace ClassicUs.SheriffMod
         {
             if (rm == null) return;
             SheriffPlugin.EnsureIl2CppTypeRegistered();
+            if (!SheriffPlugin.IsTypeReady) return;
             try
             {
                 if (rm.allRoles != null)

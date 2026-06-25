@@ -57,6 +57,8 @@ namespace ClassicUs.SheriffMod
             Log.LogInfo("Classic Us Sheriff loaded.");
         }
 
+        public static bool IsTypeReady;
+
         public static void EnsureIl2CppTypeRegistered()
         {
             if (_il2CppTypeRegistered) return;
@@ -67,6 +69,7 @@ namespace ClassicUs.SheriffMod
                 try
                 {
                     ClassInjector.RegisterTypeInIl2Cpp<SheriffRole>();
+                    IsTypeReady = true;
                     Log.LogInfo("SheriffRole type registered in IL2CPP.");
                 }
                 catch (Exception e)
