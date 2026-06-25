@@ -51,7 +51,7 @@ namespace ClassicUs.SheriffMod
                 if (rm.allRoles != null)
                 {
                     foreach (var r in rm.allRoles)
-                        if (r != null && r.TryCast<SheriffRole>() != null) return;
+                        if (r != null && r.SafeTryCast<SheriffRole>() != null) return;
                 }
 
                 rm.AddRole(Il2CppType.Of<SheriffRole>(), SheriffPlugin.RoleModName);
@@ -60,7 +60,7 @@ namespace ClassicUs.SheriffMod
 
                 foreach (var role in rm.allRoles)
                 {
-                    if (role != null && role.TryCast<SheriffRole>() != null)
+                    if (role != null && role.SafeTryCast<SheriffRole>() != null)
                     {
                         SheriffPlugin.SheriffRoleName = role.roleCodeName;
                         break;
@@ -79,7 +79,7 @@ namespace ClassicUs.SheriffMod
     {
         private static void Postfix(RoleBehaviour __instance, PlayerControl player)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return;
             try
             {
                 __instance.RoleTeamType = RoleTeamTypes.Crewmate;
@@ -105,7 +105,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = "Sheriff";
             return false;
         }
@@ -116,7 +116,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = "You are a Sheriff. Kill the Impostor with your kill button.\nIf you kill an innocent crewmate, you will die.";
             return false;
         }
@@ -127,7 +127,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = "Find and kill the Impostor";
             return false;
         }
@@ -138,7 +138,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref float __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = SheriffPlugin.ActiveCooldown;
             return false;
         }
@@ -149,7 +149,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref Color __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = new Color(1f, 0.65f, 0f, 1f);
             return false;
         }
@@ -160,7 +160,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref AudioClip __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = null;
             return false;
         }
@@ -171,7 +171,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = string.Empty;
             return false;
         }
@@ -182,7 +182,7 @@ namespace ClassicUs.SheriffMod
     {
         private static bool Prefix(RoleBehaviour __instance, ref string __result)
         {
-            if (__instance == null || __instance.TryCast<SheriffRole>() == null) return true;
+            if (__instance == null || __instance.SafeTryCast<SheriffRole>() == null) return true;
             __result = "Kill";
             return false;
         }
@@ -193,7 +193,7 @@ namespace ClassicUs.SheriffMod
     {
         private static void Postfix(RoleBehaviour role, ref Color __result)
         {
-            if (role != null && role.TryCast<SheriffRole>() != null)
+            if (role != null && role.SafeTryCast<SheriffRole>() != null)
                 __result = new Color(1f, 0.65f, 0f, 1f);
         }
     }
@@ -295,7 +295,7 @@ namespace ClassicUs.SheriffMod
             try
             {
                 var role = exiled.myRole;
-                if (role == null || role.TryCast<SheriffRole>() == null) return;
+                if (role == null || role.SafeTryCast<SheriffRole>() == null) return;
 
                 string text = $"{exiled.PlayerName} was the Sheriff.";
                 if (__instance.Text != null) __instance.Text.Text = text;

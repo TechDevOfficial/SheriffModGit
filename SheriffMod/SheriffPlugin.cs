@@ -149,7 +149,7 @@ namespace ClassicUs.SheriffMod
         {
             if (p == null || p.Data == null) return false;
             var role = p.Data.myRole;
-            return role != null && role.TryCast<SheriffRole>() != null;
+            return role != null && role.SafeTryCast<SheriffRole>() != null;
         }
     }
 }
