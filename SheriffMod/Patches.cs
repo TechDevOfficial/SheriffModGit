@@ -406,7 +406,7 @@ namespace ClassicUs.SheriffMod
             var template = menu.keyvaluePrefab;
             if (template == null) return;
 
-            _injectedCount = 0;
+            _injectedCount = ManactorAPI.ReserveSettingsRows(menu.GetInstanceID(), 4);
 
             InjectToggle(menu, parent, template, "SheriffToggle", "Enable Sheriff",
                 () => {
@@ -456,7 +456,7 @@ namespace ClassicUs.SheriffMod
                     }
                 });
 
-            InjectNumeric(menu, parent, template, "SheriffRoleChance", "Sheriff Role Chance", 10f, 0f, 100f, "0%",
+            InjectNumeric(menu, parent, template, "SheriffRoleChance", "Sheriff Role Chance", 10f, 0f, 100f, "0\\%",
                 () => {
                     if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
                         return SheriffPlugin.CfgRoleChance.Value;
@@ -503,7 +503,7 @@ namespace ClassicUs.SheriffMod
                     cooldownText.text = SheriffPlugin.ActiveCooldown.ToString("0s");
 
                 if (_valueTexts.TryGetValue("SheriffRoleChance", out var chanceText) && chanceText != null)
-                    chanceText.text = SheriffPlugin.ActiveRoleChance.ToString("0%");
+                    chanceText.text = SheriffPlugin.ActiveRoleChance.ToString("0\\%");
             }
             catch (Exception e)
             {
